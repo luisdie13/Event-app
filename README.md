@@ -42,10 +42,7 @@ cd event-platform
 docker-compose up -d
 ```
 
-Esto iniciará PostgreSQL en el puerto 5432 con las siguientes credenciales:
-- Usuario: `postgres`
-- Contraseña: `admin123*`
-- Base de datos: `eventplatform`
+Esto iniciará PostgreSQL en el puerto 5432
 
 #### Inicializar la Base de Datos
 
@@ -59,32 +56,16 @@ docker exec -i postgres_db psql -U postgres -d eventplatform < database/init.sql
 psql -h localhost -U postgres -d eventplatform -f database/init.sql
 ```
 
-Cuando se te pida la contraseña, ingresa: `admin123*`
-
 El script creará:
 - Tablas: roles, users, categories, events, images, tickets
 - Roles por defecto (administrator ID=5, member ID=2)
 - Categorías de eventos
-- Usuarios de prueba:
-  - Admin: `admin@eventplatform.com` / `admin123`
-  - Usuario: `user@eventplatform.com` / `member123`
 
 ### 3. Configurar el Backend
 
 ```bash
 cd backend
 npm install
-```
-
-El archivo `.env` ya está configurado con:
-```
-PORT=3000
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASSWORD=admin123*
-DB_NAME=eventplatform
-DB_PORT=5432
-JWT_SECRET=mi_secreto_super_seguro_y_largo_debes_cambiarlo_en_produccion_12345
 ```
 
 ### 4. Configurar el Frontend
@@ -115,16 +96,6 @@ npm run dev
 La aplicación estará disponible en: `http://localhost:5175`
 
 ## 👥 Usuarios de Prueba
-
-### Administrador
-- Email: `admin@eventplatform.com`
-- Contraseña: `admin123`
-- Acceso al panel de administración
-
-### Usuario Regular
-- Email: `user@eventplatform.com`
-- Contraseña: `member123`
-- Acceso limitado (sin panel de administración)
 
 ## 🎨 Características
 
@@ -246,7 +217,7 @@ docker-compose logs db
 ```
 
 ### Error de CORS
-Verifica que el frontend esté corriendo en `http://localhost:5175` y el backend en `http://localhost:3000`
+Verifica que el frontend esté corriendo en `http://localhost:5175` y el backend en `http://localhost:3001`
 
 ### Error de autenticación
 Asegúrate de que el JWT_SECRET en `.env` esté configurado correctamente
@@ -270,4 +241,4 @@ Asegúrate de que el JWT_SECRET en `.env` esté configurado correctamente
 
 ## 📄 Licencia
 
-Este proyecto fue desarrollado como parte del curso de Aplicación en JS - Universidad Galileo.
+Este proyecto fue desarrollado como parte del curso de Proyectos - Universidad Galileo.

@@ -1,0 +1,106 @@
+# ============================================
+# ROOT .gitignore - Event Platform
+# ============================================
+
+# Environment Variables (CRITICAL - Contains secrets)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+!.env.example
+
+# Database Data (CRITICAL - Contains user data)
+postgres_data/
+*.sql.backup
+*.dump
+*.sqlite
+*.db
+
+# Docker volumes and data
+docker-data/
+volumes/
+
+# Node modules (all subdirectories)
+node_modules/
+**/node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.local
+
+# IDE and Editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
+*.sublime-project
+
+# OS generated files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Coverage and testing
+coverage/
+*.coverage
+.nyc_output/
+.jest/
+
+# Package manager files
+package-lock.json.backup
+yarn.lock.backup
+pnpm-lock.yaml.backup
+
+# Sensitive configuration (if exists)
+config/secrets.json
+config/credentials.json
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+
+# Docker
+.dockerignore.backup
+docker-compose.override.yml
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+
+# Backup files
+*.backup
+*_backup
+backup/
+
+# Generated documentation
+docs/build/

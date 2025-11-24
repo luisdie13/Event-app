@@ -1,0 +1,40 @@
+{
+  "model_list": [
+    {
+      "model_name": "claude-3-7-sonnet",
+      "litellm_params": {
+        "model": "claude-3-7-sonnet:fuelix",
+        "provider": "bedrock",
+        "version": "20250219"
+      }
+    },
+    {
+      "model_name": "claude-3-5-sonnet",
+      "litellm_params": {
+        "model": "claude-3-5-sonnet:fuelix",
+        "provider": "bedrock",
+        "version": "20241022"
+      }
+    },
+    {
+      "model_name": "gpt-4o-mini",
+      "litellm_params": {
+        "model": "gpt-4o-mini:fuelix",
+        "provider": "openai"
+      }
+    }
+  ],
+  "router_settings": {
+    "routing_strategy": "simple-shuffle",
+    "context_window_fallbacks": [
+      {
+        "claude-3-7-sonnet": ["claude-3-5-sonnet", "gpt-4o-mini"]
+      },
+      {
+        "claude-3-5-sonnet": ["gpt-4o-mini"]
+      }
+    ],
+    "timeout": 30,
+    "max_retries": 2
+  }
+}

@@ -202,42 +202,63 @@ event-platform/
 - `PUT /api/admin/users/:userId/role` - Cambiar rol de usuario
 - `GET /api/admin/reports` - Reportes y estadísticas
 
-## 🐛 Solución de Problemas
+## 🧪 Testing
 
-### La base de datos no se conecta
+Este proyecto incluye un conjunto completo de pruebas unitarias y de integración con cobertura mínima del 80%.
+
+### Ejecutar Pruebas
+
 ```bash
-# Verificar que Docker esté corriendo
-docker ps
+cd backend
 
-# Reiniciar el contenedor
-docker-compose restart
+# Instalar dependencias de testing
+npm install
 
-# Ver logs
-docker-compose logs db
+# Ejecutar todas las pruebas
+npm test
+
+# Ejecutar solo pruebas unitarias
+npm run test:unit
+
+# Ejecutar solo pruebas de integración
+npm run test:integration
+
+# Ejecutar con reporte de cobertura
+npm run test:coverage
 ```
 
-### Error de CORS
-Verifica que el frontend esté corriendo en `http://localhost:5175` y el backend en `http://localhost:3001`
+### Configuración de Base de Datos de Pruebas
 
-### Error de autenticación
-Asegúrate de que el JWT_SECRET en `.env` esté configurado correctamente
+```bash
+# Crear base de datos de pruebas
+docker exec -i postgres_db psql -U postgres -c "CREATE DATABASE eventplatform_test;"
 
-## 📝 Notas de Desarrollo
+# Inicializar esquema
+docker exec -i postgres_db psql -U postgres -d eventplatform_test < database/init.sql
+```
 
-- El backend usa ES Modules (import/export)
-- El frontend está configurado para correr en el puerto 5175
-- Las contraseñas de prueba en init.sql son placeholders - en producción deberían generarse con bcrypt real
-- Los roles tienen IDs específicos: administrator=5, member=2
+### Cobertura de Código
 
-## 🚀 Próximas Características
+- Mínimo requerido: **80%** en todas las métricas
+- Las pruebas incluyen:
+  - ✅ Pruebas unitarias de controladores
+  - ✅ Pruebas de integración con base de datos real
+  - ✅ Validación de seguridad (autenticación/autorización)
+  - ✅ Pruebas de flujos completos (registro, login, eventos, compras)
 
-- [ ] Sistema de compra de tickets
-- [ ] Panel de usuario para ver tickets comprados
-- [ ] Subida de imágenes real (actualmente solo URLs)
-- [ ] Paginación en el frontend
-- [ ] Búsqueda avanzada
-- [ ] Notificaciones
-- [ ] Exportación de reportes
+Ver documentación completa en: [`backend/TESTING.md`](backend/TESTING.md)
+
+## 🔄 CI/CD
+
+El proyecto incluye GitHub Actions que ejecuta automáticamente:
+- Todas las pruebas unitarias
+- Todas las pruebas de integración
+- Análisis de cobertura de código
+- Verificación de umbral del 80%
+
+El workflow se ejecuta en cada:
+- Push a ramas `main` o `develop`
+- Pull request a ramas `main` o `develop`
 
 ## 📄 Licencia
 

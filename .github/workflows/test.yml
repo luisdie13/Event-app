@@ -1,0 +1,78 @@
+name: Coverage 80% (Profesional)
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage-profesional:
+    name: "Coverage Profesional (80%)"
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: eventplatform_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    # 1. Setup básico
+    - name: Obtener código
+      uses: actions/checkout@v4
+    
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Instalar dependencias
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Inicializar base de datos de pruebas
+      working-directory: ./backend
+      env:
+        PGPASSWORD: postgres
+      run: |
+        sleep 5
+        psql -h localhost -U postgres -d eventplatform_test -f ../database/init.sql
+
+    # 2. Ejecutar tests con coverage
+    - name: Ejecutar tests con coverage
+      working-directory: ./backend
+      env:
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: eventplatform
+        DB_TEST_NAME: eventplatform_test
+        JWT_SECRET: test_secret_key_for_ci
+        NODE_ENV: test
+      run: |
+        npm run test:coverage
+    
+    # 3. Lección final (siempre se ejecuta)
+    - name: "Lección: ¿Qué aprendemos del Coverage Alto?"
+      if: always()
+      run: |
+        echo ""
+        echo "EXPLICACIÓN DEL REPORTE:"
+        echo "  Columns → | % Stmts | % Branch | % Funcs | % Lines |"
+        echo "  Stmts:    Declaraciones ejecutadas"
+        echo "  Branch:   Ramas de código (if/else) probadas"  
+        echo "  Funcs:    Funciones llamadas en tests"
+        echo "  Lines:    Líneas de código ejecutadas"

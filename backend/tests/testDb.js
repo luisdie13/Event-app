@@ -18,6 +18,73 @@ export const testPool = new Pool({
 // Setup test database
 export const setupTestDb = async () => {
   try {
+    // Create tables if they don't exist (for CI environment)
+    await testPool.query(`
+      CREATE TABLE IF NOT EXISTS roles (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL
+      );
+    `);
+
+    await testPool.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        slug VARCHAR(100) UNIQUE NOT NULL
+      );
+    `);
+
+    await testPool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role_id INTEGER REFERENCES roles(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await testPool.query(`
+      CREATE TABLE IF NOT EXISTS events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        description TEXT,
+        date_time TIMESTAMP NOT NULL,
+        location VARCHAR(255) NOT NULL,
+        category_id INTEGER REFERENCES categories(id),
+        total_tickets INTEGER NOT NULL,
+        available_tickets INTEGER NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        is_featured BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await testPool.query(`
+      CREATE TABLE IF NOT EXISTS images (
+        id SERIAL PRIMARY KEY,
+        event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+        url VARCHAR(500) NOT NULL,
+        is_main BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await testPool.query(`
+      CREATE TABLE IF NOT EXISTS tickets (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        quantity INTEGER NOT NULL,
+        total_price DECIMAL(10,2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'active',
+        purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Clean up existing data in proper order (respecting foreign keys)
     await testPool.query('DELETE FROM tickets');
     await testPool.query('DELETE FROM images');

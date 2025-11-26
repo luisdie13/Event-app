@@ -63,24 +63,36 @@ const Header = () => {
 
         {/* --- SECCIÓN CENTRAL: NAVEGACIÓN --- */}
         {/* Usamos 'gap-2' para separar cada botón y 'hidden md:flex' para ocultarlo en móviles */}
-        <nav className="hidden md:flex items-center gap-2">
-          
-          <Link to="/" className={navLinkClass('/')}>
-            Inicio
-          </Link>
-          
-          {loading && <span className="text-xs text-gray-500 animate-pulse">Cargando...</span>}
-
-          {!loading && categories.map((category) => (
-            <Link 
-              key={category.id} 
-              to={`/events/${category.slug}`} 
-              className={navLinkClass(`/events/${category.slug}`)}
-            >
-              {category.name}
+        {/* Solo mostramos navegación de eventos si NO es admin */}
+        {!isAdmin && (
+          <nav className="hidden md:flex items-center gap-2">
+            
+            <Link to="/" className={navLinkClass('/')}>
+              Inicio
             </Link>
-          ))}
-        </nav>
+            
+            {loading && <span className="text-xs text-gray-500 animate-pulse">Cargando...</span>}
+
+            {!loading && categories.map((category) => (
+              <Link 
+                key={category.id} 
+                to={`/events/${category.slug}`} 
+                className={navLinkClass(`/events/${category.slug}`)}
+              >
+                {category.name}
+              </Link>
+            ))}
+          </nav>
+        )}
+        
+        {/* Navegación para Admins */}
+        {isAdmin && (
+          <nav className="hidden md:flex items-center gap-2">
+            <Link to="/admin/dashboard" className={navLinkClass('/admin/dashboard')}>
+              Panel de Administración
+            </Link>
+          </nav>
+        )}
 
         {/* --- SECCIÓN DERECHA: USUARIO Y ACCIONES --- */}
         {/* Usamos 'gap-4' para separar los botones de acción del saludo */}
@@ -104,12 +116,15 @@ const Header = () => {
                     <span className="text-sm font-bold text-primary-300 leading-none">{getUserName()}</span>
                 </div>
                 
-                <Link 
-                  to="/my-tickets"
-                  className="text-gray-300 hover:text-primary-400 font-medium text-sm transition-colors border border-gray-600 hover:border-primary-400 rounded-lg px-3 py-1.5"
-                >
-                  Mis Tickets
-                </Link>
+                {/* Solo mostrar "Mis Tickets" si NO es admin */}
+                {!isAdmin && (
+                  <Link 
+                    to="/my-tickets"
+                    className="text-gray-300 hover:text-primary-400 font-medium text-sm transition-colors border border-gray-600 hover:border-primary-400 rounded-lg px-3 py-1.5"
+                  >
+                    Mis Tickets
+                  </Link>
+                )}
                 
                 <button 
                   onClick={handleLogout}

@@ -23,7 +23,8 @@ describe('Orders Integration Tests', () => {
   });
 
   afterAll(async () => {
-    await teardownTestDb();
+    // Clean up test data (pool will be closed by global teardown)
+    await testPool.query('TRUNCATE TABLE tickets, images, events, categories, users, roles RESTART IDENTITY CASCADE');
   });
 
   beforeEach(async () => {

@@ -58,11 +58,19 @@ export const setupTestDb = async () => {
 export const teardownTestDb = async () => {
   try {
     await testPool.query('TRUNCATE TABLE tickets, images, events, categories, users, roles RESTART IDENTITY CASCADE');
-    await testPool.end();
     console.log('✅ Test database cleaned up');
   } catch (error) {
     console.error('Error tearing down test database:', error);
     throw error;
+  }
+};
+
+// Close the pool connection (call this in global teardown)
+export const closeTestPool = async () => {
+  try {
+    await testPool.end();
+  } catch (error) {
+    console.error('Error closing test pool:', error);
   }
 };
 
@@ -92,7 +100,7 @@ export const createTestEvent = async (eventData = {}) => {
 
   const {
     title = 'Test Event',
-    slug = 'test-event-' + Date.now(),
+    slug = 'test-event-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
     description = 'Test Description',
     date_time = new Date(Date.now() + 86400000).toISOString(),
     location = 'Test Location',

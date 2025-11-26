@@ -1,5 +1,7 @@
 // frontend/src/components/Home.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import EventCard from './EventCard';
 
 const API_URL = 'http://localhost:3001';
@@ -8,6 +10,15 @@ const Home = () => {
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirigir admins al dashboard
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isAdmin, navigate]);
 
   useEffect(() => {
     const fetchEvents = async () => {

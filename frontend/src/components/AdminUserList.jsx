@@ -11,6 +11,7 @@ const AdminUserList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [statusMessage, setStatusMessage] = useState({ type: '', message: '' });
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Estados para el formulario de "Crear Usuario"
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -97,6 +98,40 @@ const AdminUserList = () => {
         }
     };
 
+    // --- ELIMINAR USUARIO (NUEVO) ---
+    const handleDeleteUser = async (userId, userName) => {
+        if (userId === currentUser.id) {
+            setStatusMessage({ type: 'error', message: 'No puedes eliminar tu propia cuenta.' });
+            return;
+        }
+
+        if (!window.confirm(`¿Estás seguro de que deseas eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al eliminar el usuario.');
+            }
+
+            // Actualizar lista eliminando el usuario
+            setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
+            setStatusMessage({ type: 'success', message: data.message });
+
+        } catch (e) {
+            setStatusMessage({ type: 'error', message: e.message });
+        }
+    };
+
     // --- CREAR NUEVO USUARIO (NUEVO) ---
     const handleInputChange = (e) => {
         setNewUser({ ...newUser, [e.target.name]: e.target.value });
@@ -136,6 +171,16 @@ const AdminUserList = () => {
     if (loading) return <div className="text-center py-10 text-gray-500">Cargando usuarios...</div>;
     if (error) return <div className="text-center py-10 text-red-600">Error: {error}</div>;
 
+    // Filtrar usuarios basándose en el término de búsqueda
+    const filteredUsers = users.filter(user => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            user.name.toLowerCase().includes(searchLower) ||
+            user.email.toLowerCase().includes(searchLower) ||
+            user.role_name.toLowerCase().includes(searchLower)
+        );
+    });
+
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg">
             
@@ -151,6 +196,45 @@ const AdminUserList = () => {
                     >
                         <span>👤</span> Agregar Usuario
                     </button>
+                )}
+            </div>
+
+            {/* Barra de búsqueda */}
+            <div className="mb-4">
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Buscar usuarios por nombre, email o rol..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pr-12 py-3 pl-11 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-sm text-gray-900"
+                        style={{ paddingLeft: '2.75rem' }}
+                    />
+                    <svg 
+                        className="absolute top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                        style={{ left: '0.75rem' }}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            title="Limpiar búsqueda"
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+                {searchTerm && (
+                    <p className="mt-2 text-sm text-gray-600">
+                        Mostrando {filteredUsers.length} de {users.length} usuario{filteredUsers.length !== 1 ? 's' : ''}
+                    </p>
                 )}
             </div>
 
@@ -233,7 +317,7 @@ const AdminUserList = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {user.name} 
@@ -249,7 +333,7 @@ const AdminUserList = () => {
                                         {user.role_name === 'administrator' ? 'Administrador' : 'Miembro'}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <button
                                         onClick={() => handleRoleChange(user.id, user.role_name)}
                                         disabled={user.id === currentUser?.id}
@@ -263,12 +347,46 @@ const AdminUserList = () => {
                                     >
                                         {user.role_name === 'administrator' ? '⬇ Degradar' : '⬆ Promover'}
                                     </button>
+                                    <button
+                                        onClick={() => handleDeleteUser(user.id, user.name)}
+                                        disabled={user.id === currentUser?.id}
+                                        className={`px-3 py-1 text-xs font-bold rounded shadow-sm transition duration-150 border ${
+                                            user.id === currentUser?.id 
+                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' 
+                                                : 'bg-white text-red-600 border-red-200 hover:bg-red-50'
+                                        }`}
+                                    >
+                                        🗑️ Eliminar
+                                    </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            
+            {/* Mensaje cuando no hay usuarios */}
+            {users.length === 0 && (
+                <div className="text-center py-12">
+                    <p className="text-gray-400 text-lg">No hay usuarios registrados todavía.</p>
+                </div>
+            )}
+            
+            {/* Mensaje cuando no hay resultados de búsqueda */}
+            {users.length > 0 && filteredUsers.length === 0 && (
+                <div className="text-center py-12">
+                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p className="text-gray-400 text-lg">No se encontraron usuarios que coincidan con "{searchTerm}"</p>
+                    <button 
+                        onClick={() => setSearchTerm('')}
+                        className="mt-3 text-primary-600 hover:text-primary-800 font-medium"
+                    >
+                        Limpiar búsqueda
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

@@ -14,6 +14,7 @@ const AdminEventList = ({ startEdit, goToCreate }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     // ID del rol de administrador
     const ADMIN_ROLE_ID = 5; 
@@ -106,6 +107,16 @@ const AdminEventList = ({ startEdit, goToCreate }) => {
         return date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     };
 
+    // Filtrar eventos basándose en el término de búsqueda
+    const filteredEvents = events.filter(event => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            event.title.toLowerCase().includes(searchLower) ||
+            event.category_name.toLowerCase().includes(searchLower) ||
+            (event.location && event.location.toLowerCase().includes(searchLower))
+        );
+    });
+
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg max-w-6xl mx-auto">
             
@@ -122,6 +133,45 @@ const AdminEventList = ({ startEdit, goToCreate }) => {
                 >
                     <span>➕</span> Nuevo Evento
                 </button>
+            </div>
+
+            {/* Barra de búsqueda */}
+            <div className="mb-4">
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Buscar eventos por título, categoría o ubicación..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pr-12 py-3 pl-11 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-sm text-gray-900"
+                        style={{ paddingLeft: '2.75rem' }}
+                    />
+                    <svg 
+                        className="absolute top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                        style={{ left: '0.75rem' }}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            title="Limpiar búsqueda"
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+                {searchTerm && (
+                    <p className="mt-2 text-sm text-gray-600">
+                        Mostrando {filteredEvents.length} de {events.length} evento{filteredEvents.length !== 1 ? 's' : ''}
+                    </p>
+                )}
             </div>
 
             {message && (
@@ -142,7 +192,7 @@ const AdminEventList = ({ startEdit, goToCreate }) => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {events.map((event) => (
+                        {filteredEvents.map((event) => (
                             <tr key={event.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-4 py-3 text-sm font-medium text-gray-900">{event.title}</td>
                                 <td className="px-4 py-3 text-sm text-gray-500">
@@ -178,6 +228,20 @@ const AdminEventList = ({ startEdit, goToCreate }) => {
                     <p className="text-gray-400 text-lg">No hay eventos creados todavía.</p>
                     <button onClick={goToCreate} className="mt-2 text-primary-600 hover:text-primary-800 font-medium">
                         ¡Crea el primero aquí!
+                    </button>
+                </div>
+            )}
+            {events.length > 0 && filteredEvents.length === 0 && (
+                <div className="text-center py-12">
+                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p className="text-gray-400 text-lg">No se encontraron eventos que coincidan con "{searchTerm}"</p>
+                    <button 
+                        onClick={() => setSearchTerm('')}
+                        className="mt-3 text-primary-600 hover:text-primary-800 font-medium"
+                    >
+                        Limpiar búsqueda
                     </button>
                 </div>
             )}

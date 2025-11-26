@@ -1,6 +1,6 @@
 // backend/controllers/reportController.js
 
-// 👇 CORRECTED: Use pool from the new standardized db.js
+// Use pool from the new standardized db.js
 import { pool } from '../database/db.js';
 
 /**
@@ -14,11 +14,11 @@ export const getReports = async (req, res) => {
         const salesQuery = `
             SELECT 
                 COALESCE(SUM(total_price), 0) AS total_sales,
-                COALESCE(COUNT(*), 0) AS total_tickets_sold
+                COALESCE(SUM(quantity), 0) AS total_tickets_sold
             FROM tickets
             WHERE status = 'active';
         `;
-        // 👇 UPDATED: pool.query
+        // pool.query
         const salesResult = await pool.query(salesQuery);
         
         // 2. Total de asistentes únicos (usuarios que compraron tickets)
@@ -34,8 +34,8 @@ export const getReports = async (req, res) => {
             SELECT 
                 e.title,
                 e.slug,
-                COUNT(t.id) AS tickets_sold,
-                SUM(t.total_price) AS revenue
+                COALESCE(SUM(t.quantity), 0) AS tickets_sold,
+                COALESCE(SUM(t.total_price), 0) AS revenue
             FROM events e
             LEFT JOIN tickets t ON e.id = t.event_id AND t.status = 'active'
             GROUP BY e.id, e.title, e.slug
@@ -48,7 +48,7 @@ export const getReports = async (req, res) => {
         const categoryQuery = `
             SELECT 
                 c.name AS category_name,
-                COUNT(t.id) AS tickets_sold,
+                COALESCE(SUM(t.quantity), 0) AS tickets_sold,
                 COALESCE(SUM(t.total_price), 0) AS revenue
             FROM categories c
             LEFT JOIN events e ON c.id = e.category_id

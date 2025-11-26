@@ -8,7 +8,9 @@ export const createOrder = async (req, res) => {
     }
 
     const userId = req.user.id;
-    const { eventId, quantity } = req.body;
+    // Accept both eventId (camelCase) and event_id (snake_case) for compatibility
+    const eventId = req.body.eventId || req.body.event_id;
+    const { quantity } = req.body;
 
     // 2. Validación de datos
     if (!eventId || !quantity || quantity < 1) {
@@ -20,14 +22,23 @@ export const createOrder = async (req, res) => {
         
         res.status(201).json({
             message: "¡Compra realizada con éxito!",
-            ticketId: result.id
+            ticket: {
+                id: result.id,
+                event_id: eventId,
+                quantity: quantity,
+                user_id: userId
+            }
         });
     } catch (error) {
         console.error("Error creando orden:", error.message);
         
         // Manejar errores de negocio específicos (para no devolver siempre 500)
-        if (error.message.includes("tickets disponibles") || error.message.includes("Evento no encontrado")) {
-            return res.status(409).json({ message: error.message }); // 409 Conflict
+        if (error.message.includes("Evento no encontrado") || error.message.includes("ID inválido") || error.message.includes("invalid input syntax for type uuid")) {
+            return res.status(404).json({ message: "Evento no encontrado." }); // 404 Not Found
+        }
+        
+        if (error.message.includes("tickets disponibles") || error.message.includes("Stock insuficiente")) {
+            return res.status(400).json({ message: error.message }); // 400 Bad Request
         }
         
         res.status(500).json({ message: "Error al procesar la compra en el servidor." });

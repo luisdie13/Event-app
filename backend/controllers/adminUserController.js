@@ -26,7 +26,7 @@ export const getAllUsers = async (req, res) => {
             ORDER BY 
                 u.created_at DESC;
         `;
-        // 👇 UPDATED: Use pool.query
+        // Use pool.query
         const result = await pool.query(sql);
 
         res.status(200).json(result.rows);
@@ -63,7 +63,7 @@ export const updateUserRole = async (req, res) => {
             WHERE id = $2
             RETURNING id, name, email;
         `;
-        // 👇 UPDATED: Use pool.query
+        // Use pool.query
         const result = await pool.query(sql, [newRoleId, userId]);
 
         if (result.rowCount === 0) {
@@ -77,5 +77,41 @@ export const updateUserRole = async (req, res) => {
     } catch (error) {
         console.error(`Error al actualizar rol del usuario ${userId}:`, error);
         res.status(500).json({ message: 'Error interno del servidor al actualizar el rol.' });
+    }
+};
+
+/**
+ * @desc Eliminar un usuario
+ * @route DELETE /api/admin/users/:userId
+ * @access Private/Admin
+ */
+export const deleteUser = async (req, res) => {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
+
+    // Prevenir que el admin se elimine a sí mismo
+    if (parseInt(userId) === currentUserId) {
+        return res.status(403).json({ message: 'No puedes eliminar tu propia cuenta.' });
+    }
+
+    try {
+        const sql = `
+            DELETE FROM users
+            WHERE id = $1
+            RETURNING id, name, email;
+        `;
+        const result = await pool.query(sql, [userId]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: `Usuario con ID ${userId} no encontrado.` });
+        }
+
+        res.status(200).json({ 
+            message: `Usuario "${result.rows[0].name}" eliminado exitosamente.`,
+            user: result.rows[0]
+        });
+    } catch (error) {
+        console.error(`Error al eliminar usuario ${userId}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor al eliminar el usuario.' });
     }
 };

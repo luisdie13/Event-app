@@ -1,0 +1,149 @@
+name: CI - Pruebas y Cobertura
+
+on:
+  push:
+    branches: [ main, master, develop, feature/* ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  test:
+    name: "Ejecutar Pruebas y Verificar Cobertura"
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: eventplatform_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Obtener código del repositorio
+      uses: actions/checkout@v4
+    
+    - name: Configurar Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Instalar dependencias
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Ejecutar pruebas con cobertura
+      working-directory: ./backend
+      env:
+        NODE_ENV: test
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: eventplatform
+        DB_TEST_NAME: eventplatform_test
+        JWT_SECRET: mi_secreto_super_seguro_y_largo_debes_cambiarlo
+      run: npm run test:coverage
+    
+    - name: Verificar umbral de cobertura (80%)
+      working-directory: ./backend
+      env:
+        NODE_ENV: test
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: eventplatform
+        DB_TEST_NAME: eventplatform_test
+        JWT_SECRET: mi_secreto_super_seguro_y_largo_debes_cambiarlo
+      run: |
+        echo "========================================"
+        echo "VERIFICACIÓN DE COBERTURA PROFESIONAL"
+        echo "Umbral requerido: 80%"
+        echo "========================================"
+        echo ""
+        
+        COVERAGE_OUTPUT=$(npm run test:coverage 2>&1)
+        echo "$COVERAGE_OUTPUT"
+        
+        # Extraer línea de cobertura total
+        COVERAGE_LINE=$(echo "$COVERAGE_OUTPUT" | grep "All files" | head -1)
+        
+        if [ -n "$COVERAGE_LINE" ]; then
+          echo ""
+          echo "Línea de cobertura encontrada:"
+          echo "$COVERAGE_LINE"
+          echo ""
+          
+          # Extraer porcentaje (primer número decimal)
+          COVERAGE_PERCENT=$(echo "$COVERAGE_LINE" | grep -oE '[0-9]+(\.[0-9]+)?' | head -1)
+          
+          if [ -n "$COVERAGE_PERCENT" ]; then
+            COVERAGE_INT=$(echo "$COVERAGE_PERCENT" | cut -d'.' -f1)
+            THRESHOLD=80
+            
+            echo "=========================================="
+            echo "RESULTADO DE LA VERIFICACIÓN:"
+            echo "  Cobertura actual: $COVERAGE_PERCENT%"
+            echo "  Umbral requerido: $THRESHOLD%"
+            echo "=========================================="
+            echo ""
+            
+            if [ "$COVERAGE_INT" -lt "$THRESHOLD" ]; then
+              echo "❌ COBERTURA INSUFICIENTE"
+              echo "   Faltante: $((THRESHOLD - COVERAGE_INT))%"
+              echo ""
+              echo "📝 Para mejorar la cobertura:"
+              echo "   1. Identifica archivos con baja cobertura"
+              echo "   2. Escribe pruebas para casos no cubiertos"
+              echo "   3. Ejecuta 'npm run test:coverage' localmente"
+              echo ""
+              exit 1
+            else
+              echo "✅ COBERTURA EXCELENTE"
+              echo "   ¡Felicitaciones! El proyecto cumple con el estándar profesional"
+              echo ""
+            fi
+          else
+            echo "⚠️  No se pudo extraer el porcentaje de cobertura"
+            exit 1
+          fi
+        else
+          echo "⚠️  No se encontró información de cobertura en el reporte"
+          exit 1
+        fi
+    
+    - name: Subir reporte de cobertura
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: backend/coverage/
+        retention-days: 30
+    
+    - name: Resumen de ejecución
+      if: always()
+      run: |
+        echo ""
+        echo "=========================================="
+        echo "RESUMEN DE LA EJECUCIÓN"
+        echo "=========================================="
+        echo ""
+        echo "📊 Cobertura de Código:"
+        echo "   - Statements: Declaraciones ejecutadas"
+        echo "   - Branches: Ramas (if/else) probadas"
+        echo "   - Functions: Funciones llamadas"
+        echo "   - Lines: Líneas ejecutadas"
+        echo ""
+        echo "🎯 Umbral: 80% en todas las métricas"
+        echo "📁 Reporte completo disponible en artifacts"
+        echo ""

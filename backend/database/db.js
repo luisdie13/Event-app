@@ -8,10 +8,15 @@ dotenv.config();
 const { Pool } = pg;
 
 // Crear la conexión (Pool)
+// Use test database when in test environment
+const dbName = process.env.NODE_ENV === 'test' 
+  ? (process.env.DB_TEST_NAME || 'eventplatform_test')
+  : process.env.DB_NAME;
+
 export const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
+  database: dbName,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT || 5432,
 });

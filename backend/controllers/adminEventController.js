@@ -38,6 +38,50 @@ export const getAllEventsForAdmin = async (req, res) => {
 };
 
 /**
+ * @desc Crear un nuevo evento (admin)
+ * @route POST /api/admin/events
+ * @access Private/Admin
+ */
+export const createEventAdmin = async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            date_time,
+            location,
+            category_id,
+            total_tickets,
+            price,
+            is_featured
+        } = req.body;
+
+        // Validación básica
+        if (!title || !description || !date_time || !location || !category_id || !total_tickets || !price) {
+            return res.status(400).json({ message: 'Todos los campos obligatorios deben ser proporcionados.' });
+        }
+
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
+        
+        const result = await pool.query(`
+            INSERT INTO events (
+                user_id, category_id, title, slug, description, date_time, 
+                location, total_tickets, available_tickets, price, is_featured
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, $9, $10)
+            RETURNING *
+        `, [req.user.id, category_id, title, slug, description, date_time, location, total_tickets, price, is_featured || false]);
+
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error al crear evento:', error);
+        if (error.code === '23505') {
+            return res.status(409).json({ message: 'Ya existe un evento con un título similar.' });
+        }
+        res.status(500).json({ message: 'Error interno del servidor al crear el evento.' });
+    }
+};
+
+/**
  * @desc Eliminar un evento
  * @route DELETE /api/admin/events/:id
  * @access Private/Admin
@@ -76,10 +120,7 @@ export const updateEvent = async (req, res) => {
     try {
         const updatedEvent = await updateEventData(id, eventData);
 
-        res.status(200).json({
-            message: 'Evento actualizado exitosamente.',
-            event: updatedEvent,
-        });
+        res.status(200).json(updatedEvent);
 
     } catch (error) {
         console.error(`Error al actualizar evento ID ${id}:`, error.message);

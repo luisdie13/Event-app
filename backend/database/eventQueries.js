@@ -16,6 +16,7 @@ export const getFeaturedEvents = async () => {
             e.date_time, 
             e.location,
             e.price,
+            e.is_featured,
             c.name AS category_name,
             (SELECT url FROM images WHERE event_id = e.id AND is_main = TRUE LIMIT 1) AS main_image_url
         FROM 
@@ -71,7 +72,7 @@ export const getEventsList = async (categorySlug) => {
         params.push(categorySlug);
     }
 
-    sql += ` ORDER BY e.date_time ASC`;
+    sql += ` ORDER BY e.date_time ASC LIMIT 10`;
 
     try {
         // 👇 USO DE POOL

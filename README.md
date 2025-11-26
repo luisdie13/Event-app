@@ -1,84 +1,216 @@
-# Event Platform - Full Stack Application
+# 🎉 Event Platform - Plataforma de Gestión de Eventos
 
-Plataforma Full-Stack de Gestión de Eventos y Boletos desarrollada con PostgreSQL, Node.js/Express y React/Vite.
+Plataforma web completa para la gestión y venta de tickets de eventos, desarrollada con Node.js, Express, PostgreSQL y React.
 
-## 🚀 Tecnologías
+---
+
+## 📋 Índice
+
+- [Características](#-características)
+- [Tecnologías](#️-tecnologías)
+- [Requisitos Previos](#-requisitos-previos)
+- [Instalación](#-instalación)
+- [Configuración](#️-configuración)
+- [Uso](#-uso)
+- [Testing](#-testing)
+- [CI/CD](#-cicd)
+- [Documentación](#-documentación)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Contribuir](#-contribuir)
+- [Licencia](#-licencia)
+
+---
+
+## ✨ Características
+
+### Para Usuarios
+- 🔐 **Autenticación completa**: Registro, login con JWT
+- 🎫 **Explorar eventos**: Vista de eventos destacados y listado completo
+- 🛒 **Compra de tickets**: Sistema de carrito y checkout
+- 📜 **Historial**: Ver tickets comprados
+- 🔍 **Búsqueda y filtros**: Por categorías, fechas, ubicación
+
+### Para Administradores
+- 📊 **Panel de administración**: Dashboard con métricas
+- ➕ **Gestión de eventos**: CRUD completo de eventos
+- 🔍 **Búsqueda de eventos**: Barra de búsqueda en tiempo real por título, categoría o ubicación
+- 👥 **Gestión de usuarios**: Ver y modificar roles
+- 📈 **Reportes**: Estadísticas de ventas y eventos
+
+### Características Técnicas
+- ✅ **100% de cobertura en tests de integración**
+- 🚀 **CI/CD con GitHub Actions**
+- 🔒 **Seguridad**: Bcrypt, JWT, validaciones
+- 📱 **Responsive**: Diseño adaptable con Tailwind CSS
+- 🗄️ **Base de datos relacional**: PostgreSQL con constraints
+
+---
+
+## 🛠️ Tecnologías
 
 ### Backend
-- Node.js con Express
-- PostgreSQL (con Docker)
-- ES Modules (import/export)
-- JWT para autenticación
-- bcrypt para hash de contraseñas
+- **Runtime**: Node.js 18+
+- **Framework**: Express.js
+- **Base de Datos**: PostgreSQL 16
+- **Autenticación**: JWT (jsonwebtoken)
+- **Seguridad**: Bcrypt para hashing de contraseñas
+- **Validación**: Express Validator
+- **Testing**: Jest + Supertest
+- **Contenedorización**: Docker
 
 ### Frontend
-- React 18
-- Vite
-- React Router DOM
-- Bootstrap & React Bootstrap
-- Axios
-- Context API para gestión de estado
+- **Framework**: React 18+
+- **Build Tool**: Vite
+- **Routing**: React Router DOM
+- **Estilos**: Tailwind CSS
+- **HTTP Client**: Axios
+- **Estado**: Context API
 
-## 📋 Requisitos Previos
+### DevOps
+- **CI/CD**: GitHub Actions
+- **Control de Versiones**: Git
+- **Gestión de Dependencias**: NPM
+- **Variables de Entorno**: dotenv
 
-- Node.js (v16 o superior)
-- Docker y Docker Compose
-- npm o yarn
+---
 
-## 🔧 Instalación y Configuración
+## 📦 Requisitos Previos
 
-### 1. Clonar el repositorio
+Antes de comenzar, asegúrate de tener instalado:
+
+- **Node.js** >= 18.0.0
+- **npm** >= 9.0.0
+- **Docker** >= 20.0.0 (para PostgreSQL)
+- **Git**
+
+### Verificar Instalación
 
 ```bash
-git clone <repository-url>
+node --version
+npm --version
+docker --version
+git --version
+```
+
+---
+
+## 🚀 Instalación
+
+### 1. Clonar el Repositorio
+
+```bash
+git clone https://github.com/tuusuario/event-platform.git
 cd event-platform
 ```
 
-### 2. Configurar la Base de Datos
+### 2. Instalar Dependencias
 
-#### Iniciar PostgreSQL con Docker
-
-```bash
-docker-compose up -d
-```
-
-Esto iniciará PostgreSQL en el puerto 5432
-
-#### Inicializar la Base de Datos
-
-Ejecuta el script SQL de inicialización:
-
-```bash
-# Opción 1: Usando psql desde Docker
-docker exec -i postgres_db psql -U postgres -d eventplatform < database/init.sql
-
-# Opción 2: Usando psql local (si tienes PostgreSQL instalado)
-psql -h localhost -U postgres -d eventplatform -f database/init.sql
-```
-
-El script creará:
-- Tablas: roles, users, categories, events, images, tickets
-- Roles por defecto (administrator ID=5, member ID=2)
-- Categorías de eventos
-
-### 3. Configurar el Backend
-
+#### Backend
 ```bash
 cd backend
 npm install
 ```
 
-### 4. Configurar el Frontend
-
+#### Frontend
 ```bash
 cd frontend
 npm install
 ```
 
-## 🎯 Ejecutar la Aplicación
+### 3. Configurar Base de Datos
 
-### Iniciar el Backend
+#### Opción A: Usar Docker (Recomendado)
 
+```bash
+# Desde la raíz del proyecto
+docker-compose up -d
+```
+
+Esto levantará PostgreSQL en el puerto 5432.
+
+#### Opción B: PostgreSQL Local
+
+1. Instalar PostgreSQL localmente
+2. Crear base de datos:
+
+```sql
+CREATE DATABASE eventplatform;
+CREATE DATABASE eventplatform_test;
+```
+
+### 4. Inicializar Base de Datos
+
+```bash
+cd backend
+docker exec -i postgres_db psql -U postgres -d eventplatform < ../database/init.sql
+docker exec -i postgres_db psql -U postgres -d eventplatform < ../database/seed-events.sql
+```
+
+### 5. Configurar Variables de Entorno
+
+#### Backend (.env)
+```bash
+cd backend
+cp .env.example .env
+```
+
+Editar `.env`:
+```env
+NODE_ENV=development
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=eventplatform
+JWT_SECRET=tu_secreto_super_seguro_aqui_cambialo
+PORT=3000
+```
+
+#### Frontend (.env)
+```bash
+cd frontend
+cp .env.example .env
+```
+
+Editar `.env`:
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+---
+
+## ⚙️ Configuración
+
+### Configuración de Testing
+
+Para ejecutar tests, necesitas configurar:
+
+1. **Base de datos de testing**:
+```bash
+cd backend
+npm run setup:test-db
+```
+
+2. **Variables de entorno de testing** (`.env.test`):
+```env
+NODE_ENV=test
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=eventplatform
+DB_TEST_NAME=eventplatform_test
+JWT_SECRET=mi_secreto_super_seguro_y_largo_debes_cambiarlo
+PORT=3001
+```
+
+---
+
+## 🎮 Uso
+
+### Desarrollo
+
+#### Iniciar Backend
 ```bash
 cd backend
 npm run dev
@@ -86,180 +218,166 @@ npm run dev
 
 El servidor estará disponible en: `http://localhost:3000`
 
-### Iniciar el Frontend
-
+#### Iniciar Frontend
 ```bash
 cd frontend
 npm run dev
 ```
 
-La aplicación estará disponible en: `http://localhost:5175`
+La aplicación estará disponible en: `http://localhost:5173`
 
-## 👥 Usuarios de Prueba
+### Producción
 
-## 🎨 Características
-
-### Para Usuarios
-- ✅ Registro e inicio de sesión
-- ✅ Visualización de eventos destacados
-- ✅ Búsqueda y filtrado por categorías
-- ✅ Detalle de eventos
-- ✅ Navegación por categorías
-
-### Para Administradores
-- ✅ Panel de administración completo
-- ✅ Crear, editar y eliminar eventos
-- ✅ Gestión de usuarios y roles
-- ✅ Reportes de ventas y estadísticas
-- ✅ Dashboard con métricas
-
-## 📁 Estructura del Proyecto
-
-```
-event-platform/
-├── backend/
-│   ├── config/
-│   ├── controllers/
-│   │   ├── adminEventController.js
-│   │   ├── adminUserController.js
-│   │   ├── authController.js
-│   │   ├── categoryController.js
-│   │   ├── eventController.js
-│   │   └── reportController.js
-│   ├── database/
-│   │   ├── adminEventQueries.js
-│   │   ├── categoryQueries.js
-│   │   ├── db.js
-│   │   ├── eventQueries.js
-│   │   └── userQueries.js
-│   ├── middleware/
-│   │   └── authMiddleware.js
-│   ├── routes/
-│   │   ├── adminRoutes.js
-│   │   ├── authRoutes.js
-│   │   ├── categoryRoutes.js
-│   │   └── eventRoutes.js
-│   ├── .env
-│   ├── package.json
-│   └── server.js
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── AdminDashboard.jsx
-│   │   │   ├── AdminEventList.jsx
-│   │   │   ├── AdminReports.jsx
-│   │   │   ├── AdminRoute.jsx
-│   │   │   ├── AdminUserList.jsx
-│   │   │   ├── Carousel.jsx
-│   │   │   ├── CreateEventForm.jsx
-│   │   │   ├── EditEventForm.jsx
-│   │   │   ├── EventCard.jsx
-│   │   │   ├── EventDetail.jsx
-│   │   │   ├── EventList.jsx
-│   │   │   ├── Header.jsx
-│   │   │   ├── Home.jsx
-│   │   │   ├── LoginForm.jsx
-│   │   │   └── RegisterForm.jsx
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-├── database/
-│   └── init.sql
-├── docker-compose.yml
-└── README.md
+#### Backend
+```bash
+cd backend
+npm start
 ```
 
-## 🔐 Seguridad
+#### Frontend
+```bash
+cd frontend
+npm run build
+npm run preview
+```
 
-- Las contraseñas se hashean con bcrypt (10 rounds)
-- Autenticación basada en JWT
-- Middleware de protección de rutas
-- Separación de roles (administrator vs member)
-- CORS configurado para el frontend
-
-## 🌐 API Endpoints
-
-### Públicos
-- `GET /api/events/featured` - Eventos destacados
-- `GET /api/events` - Lista de eventos
-- `GET /api/events/category/:slug` - Eventos por categoría
-- `GET /api/event/:slug` - Detalle de evento
-- `GET /api/categories` - Lista de categorías
-
-### Autenticación
-- `POST /api/auth/register` - Registro de usuario
-- `POST /api/auth/login` - Inicio de sesión
-
-### Admin (requiere autenticación y rol de administrador)
-- `GET /api/admin/events` - Todos los eventos (admin)
-- `POST /api/admin/events` - Crear evento
-- `PUT /api/admin/events/:id` - Actualizar evento
-- `DELETE /api/admin/events/:id` - Eliminar evento
-- `GET /api/admin/users` - Lista de usuarios
-- `PUT /api/admin/users/:userId/role` - Cambiar rol de usuario
-- `GET /api/admin/reports` - Reportes y estadísticas
+---
 
 ## 🧪 Testing
 
-Este proyecto incluye un conjunto completo de pruebas unitarias y de integración con cobertura mínima del 80%.
-
-### Ejecutar Pruebas
+### Ejecutar Todas las Pruebas
 
 ```bash
 cd backend
-
-# Instalar dependencias de testing
-npm install
-
-# Ejecutar todas las pruebas
 npm test
+```
 
-# Ejecutar solo pruebas unitarias
-npm run test:unit
+### Ejecutar con Cobertura
 
-# Ejecutar solo pruebas de integración
-npm run test:integration
-
-# Ejecutar con reporte de cobertura
+```bash
 npm run test:coverage
 ```
 
-### Configuración de Base de Datos de Pruebas
+### Ejecutar Solo Pruebas de Integración
 
 ```bash
-# Crear base de datos de pruebas
-docker exec -i postgres_db psql -U postgres -c "CREATE DATABASE eventplatform_test;"
-
-# Inicializar esquema
-docker exec -i postgres_db psql -U postgres -d eventplatform_test < database/init.sql
+npm run test:integration
 ```
 
-### Cobertura de Código
+### Modo Watch (Desarrollo)
 
-- Mínimo requerido: **80%** en todas las métricas
-- Las pruebas incluyen:
-  - ✅ Pruebas unitarias de controladores
-  - ✅ Pruebas de integración con base de datos real
-  - ✅ Validación de seguridad (autenticación/autorización)
-  - ✅ Pruebas de flujos completos (registro, login, eventos, compras)
+```bash
+npm run test:watch
+```
 
-Ver documentación completa en: [`backend/TESTING.md`](backend/TESTING.md)
+### Resultados Actuales
 
-## 🔄 CI/CD
+```
+Test Suites: 3 passed, 3 total
+Tests:       32 passed, 32 total
+Snapshots:   0 total
+Time:        ~4s
+```
 
-El proyecto incluye GitHub Actions que ejecuta automáticamente:
-- Todas las pruebas unitarias
-- Todas las pruebas de integración
-- Análisis de cobertura de código
-- Verificación de umbral del 80%
+**Cobertura:** >80% en todas las métricas ✅
 
-El workflow se ejecuta en cada:
-- Push a ramas `main` o `develop`
-- Pull request a ramas `main` o `develop`
+### Documentación de Testing
 
-## 📄 Licencia
+Para más detalles sobre la estrategia de testing, ver:
+- [Documentación de Testing](backend/DOCUMENTACION_TESTING.md)
 
-Este proyecto fue desarrollado como parte del curso de Proyectos - Universidad Galileo.
+---
+
+## 🚀 CI/CD
+
+### GitHub Actions
+
+El proyecto incluye un workflow de CI/CD que:
+
+1. ✅ Ejecuta automáticamente en push y pull requests
+2. ✅ Configura PostgreSQL como servicio
+3. ✅ Instala dependencias
+4. ✅ Ejecuta todas las pruebas
+5. ✅ Verifica cobertura de código (umbral: 80%)
+6. ✅ Genera y guarda reportes de cobertura
+
+**Archivo**: `.github/workflows/ci-coverage.yml`
+
+### Ver Resultados
+
+Los resultados del CI/CD están disponibles en:
+- Pestaña "Actions" del repositorio en GitHub
+- Badge de estado en el README (próximamente)
+
+---
+### Endpoints Principales
+
+#### Autenticación
+- `POST /api/auth/register` - Registro de usuario
+- `POST /api/auth/login` - Inicio de sesión
+
+#### Eventos
+- `GET /api/events` - Listar eventos
+- `GET /api/events/featured` - Eventos destacados
+- `GET /api/events/:slug` - Detalle de evento
+
+#### Admin (Requiere autenticación de admin)
+- `POST /api/admin/events` - Crear evento
+- `PUT /api/admin/events/:id` - Actualizar evento
+- `DELETE /api/admin/events/:id` - Eliminar evento
+
+#### Órdenes (Requiere autenticación)
+- `POST /api/orders` - Comprar tickets
+- `GET /api/orders/my-tickets` - Mis tickets
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
+event-platform/
+├── backend/                    # Servidor Node.js/Express
+│   ├── controllers/           # Lógica de negocio
+│   ├── database/              # Queries y conexión DB
+│   ├── middleware/            # Autenticación, validación
+│   ├── routes/                # Definición de rutas
+│   ├── tests/                 # Pruebas Jest
+│   │   ├── integration/       # Tests de integración
+│   │   └── unit/              # Tests unitarios
+│   ├── .env.test              # Variables de entorno de testing
+│   ├── jest.config.js         # Configuración de Jest
+│   └── server.js              # Punto de entrada
+│
+├── frontend/                   # Aplicación React
+│   ├── src/
+│   │   ├── components/        # Componentes React
+│   │   ├── context/           # Context API
+│   │   ├── pages/             # Páginas/Vistas
+│   │   └── assets/            # Imágenes, estilos
+│   └── vite.config.js         # Configuración de Vite
+│
+├── database/                   # Scripts SQL
+│   ├── init.sql               # Esquema de base de datos
+│   └── seed-events.sql        # Datos de ejemplo
+│
+├── .github/
+│   └── workflows/
+│       └── ci-coverage.yml    # Workflow de CI/CD
+│
+├── docker-compose.yml         # Configuración de Docker
+└── README.md                  # Este archivo
+```
+
+---
+
+## 🧪 Principios de Testing Aplicados
+
+Este proyecto implementa:
+
+- ✅ **BDD (Behavior Driven Development)**: Pruebas basadas en comportamiento
+- ✅ **Pirámide de Testing**: Enfoque en pruebas de integración
+- ✅ **Given-When-Then**: Estructura clara de escenarios
+- ✅ **Cobertura >80%**: Estándar profesional
+- ✅ **CI/CD Automatizado**: Verificación continua
+
+---

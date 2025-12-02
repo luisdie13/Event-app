@@ -38,14 +38,14 @@ export const createOrderTransaction = async (userId, eventId, quantity, cardId =
         `;
         await client.query(updateEventSql, [quantity, eventId]);
 
-        // 4. Crear el ticket (con card_id si se proporcionó)
+        // 4. Crear el ticket (sin card_id por ahora, columna no existe en schema)
         const insertTicketSql = `
-            INSERT INTO tickets (event_id, user_id, quantity, status, total_price, purchase_date, card_id)
-            VALUES ($1, $2, $3, 'active', $4, NOW(), $5)
+            INSERT INTO tickets (event_id, user_id, quantity, status, total_price, purchase_date)
+            VALUES ($1, $2, $3, 'active', $4, NOW())
             RETURNING id;
         `;
         
-        const ticketResult = await client.query(insertTicketSql, [eventId, userId, quantity, totalPrice, cardId]);
+        const ticketResult = await client.query(insertTicketSql, [eventId, userId, quantity, totalPrice]);
 
         await client.query('COMMIT');
         return ticketResult.rows[0];

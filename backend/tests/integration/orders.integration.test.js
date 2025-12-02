@@ -184,9 +184,11 @@ describe('Orders Integration Tests', () => {
         .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toBeInstanceOf(Array);
-      expect(response.body.length).toBeGreaterThan(0);
-      expect(response.body[0]).toHaveProperty('quantity', 2);
+      expect(response.body).toHaveProperty('tickets');
+      expect(response.body).toHaveProperty('pagination');
+      expect(response.body.tickets).toBeInstanceOf(Array);
+      expect(response.body.tickets.length).toBeGreaterThan(0);
+      expect(response.body.tickets[0]).toHaveProperty('quantity', 2);
     });
 
     it('should return 401 without authentication', async () => {
@@ -210,7 +212,8 @@ describe('Orders Integration Tests', () => {
         .set('Authorization', `Bearer ${newUserToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual([]);
+      expect(response.body).toHaveProperty('tickets');
+      expect(response.body.tickets).toEqual([]);
     });
   });
 });

@@ -65,7 +65,7 @@ describe('Auth Integration Tests', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('message', 'Todos los campos son obligatorios.');
+      expect(response.body).toHaveProperty('message', 'Nombre, email y contraseña son obligatorios.');
     });
 
     it('should return 409 if email already exists', async () => {

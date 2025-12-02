@@ -26,11 +26,13 @@ describe('Event Queries Unit Tests', () => {
       await createTestEvent({ title: 'Not Featured', is_featured: false });
       await createTestEvent({ title: 'Featured 2', is_featured: true });
 
-      const events = await getFeaturedEvents();
+      const result = await getFeaturedEvents();
 
-      expect(events).toBeInstanceOf(Array);
-      expect(events.length).toBe(2);
-      events.forEach(event => {
+      expect(result).toHaveProperty('events');
+      expect(result).toHaveProperty('pagination');
+      expect(result.events).toBeInstanceOf(Array);
+      expect(result.events.length).toBe(2);
+      result.events.forEach(event => {
         expect(event.is_featured).toBe(true);
       });
     });
@@ -39,18 +41,19 @@ describe('Event Queries Unit Tests', () => {
       await createTestEvent({ title: 'Not Featured 1', is_featured: false });
       await createTestEvent({ title: 'Not Featured 2', is_featured: false });
 
-      const events = await getFeaturedEvents();
+      const result = await getFeaturedEvents();
 
-      expect(events).toEqual([]);
+      expect(result).toHaveProperty('events');
+      expect(result.events).toEqual([]);
     });
 
     it('should include category information', async () => {
       await createTestEvent({ title: 'Featured Event', is_featured: true, category_id: 1 });
 
-      const events = await getFeaturedEvents();
+      const result = await getFeaturedEvents();
 
-      expect(events[0]).toHaveProperty('category_name');
-      expect(events[0].category_name).toBe('Música');
+      expect(result.events[0]).toHaveProperty('category_name');
+      expect(result.events[0].category_name).toBe('Música');
     });
   });
 
@@ -60,42 +63,48 @@ describe('Event Queries Unit Tests', () => {
       await createTestEvent({ title: 'Event 2', category_id: 2 });
       await createTestEvent({ title: 'Event 3', category_id: 3 });
 
-      const events = await getEventsList();
+      const result = await getEventsList();
 
-      expect(events).toBeInstanceOf(Array);
-      expect(events.length).toBe(3);
+      expect(result).toHaveProperty('events');
+      expect(result).toHaveProperty('pagination');
+      expect(result.events).toBeInstanceOf(Array);
+      expect(result.events.length).toBe(3);
     });
 
     it('should filter by category slug when provided', async () => {
       await createTestEvent({ title: 'Music Event', category_id: 1 });
       await createTestEvent({ title: 'Sports Event', category_id: 2 });
 
-      const events = await getEventsList('musica');
+      const result = await getEventsList({ categorySlug: 'musica' });
 
-      expect(events).toBeInstanceOf(Array);
-      expect(events.length).toBeGreaterThanOrEqual(1);
+      expect(result).toHaveProperty('events');
+      expect(result.events).toBeInstanceOf(Array);
+      expect(result.events.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should return empty array for non-existent category', async () => {
       await createTestEvent({ title: 'Event 1', category_id: 1 });
 
-      const events = await getEventsList('nonexistent-category');
+      const result = await getEventsList({ categorySlug: 'nonexistent-category' });
 
-      expect(events).toEqual([]);
+      expect(result).toHaveProperty('events');
+      expect(result.events).toEqual([]);
     });
 
     it('should return events list with proper structure', async () => {
       await createTestEvent({ title: 'Event 1', category_id: 1 });
 
-      const events = await getEventsList();
+      const result = await getEventsList();
 
-      expect(events).toBeInstanceOf(Array);
-      expect(events.length).toBeGreaterThan(0);
-      expect(events[0]).toHaveProperty('id');
-      expect(events[0]).toHaveProperty('title');
-      expect(events[0]).toHaveProperty('date_time');
-      expect(events[0]).toHaveProperty('location');
-      expect(events[0]).toHaveProperty('price');
+      expect(result).toHaveProperty('events');
+      expect(result).toHaveProperty('pagination');
+      expect(result.events).toBeInstanceOf(Array);
+      expect(result.events.length).toBeGreaterThan(0);
+      expect(result.events[0]).toHaveProperty('id');
+      expect(result.events[0]).toHaveProperty('title');
+      expect(result.events[0]).toHaveProperty('date_time');
+      expect(result.events[0]).toHaveProperty('location');
+      expect(result.events[0]).toHaveProperty('price');
     });
   });
 

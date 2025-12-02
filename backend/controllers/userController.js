@@ -146,7 +146,7 @@ export const setCardAsDefault = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, email, phone, address } = req.body;
+        const { name, email } = req.body;
         
         // Validación
         if (!name || !email) {
@@ -159,7 +159,7 @@ export const updateProfile = async (req, res) => {
             return res.status(400).json({ message: 'Formato de email inválido.' });
         }
         
-        const updatedUser = await updateUserProfile(userId, name, email, phone, address);
+        const updatedUser = await updateUserProfile(userId, name, email);
         
         if (!updatedUser) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });

@@ -21,13 +21,26 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 // 1. CORS: Permite solicitudes desde el frontend
 app.use(cors({
-    origin: ['http://localhost:5175', 'http://localhost:5176', 'http://localhost:5177', 'http://localhost:5178'], 
+    origin: [
+        'http://localhost:5175', 
+        'http://localhost:5176', 
+        'http://localhost:5177', 
+        'http://localhost:5178',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000'
+    ], 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
 }));
 
 // 2. Body Parser: Permite a Express leer JSON en el cuerpo de las peticiones
 app.use(express.json());
+
+// 2.5. Asegurar que todas las respuestas usen UTF-8
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
+});
 
 // 3. Health Check
 app.get('/', (req, res) => {

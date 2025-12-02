@@ -19,6 +19,8 @@ export const pool = new Pool({
   database: dbName,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT || 5432,
+  // Asegurar que la conexión use UTF-8
+  client_encoding: 'UTF8'
 });
 
 // Listener para confirmar conexión exitosa en consola

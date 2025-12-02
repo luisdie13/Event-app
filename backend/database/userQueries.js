@@ -31,11 +31,9 @@ export const findUserByEmail = async (email) => {
  * @param {string} name - Nombre del usuario.
  * @param {string} email - Email único del usuario.
  * @param {string} passwordHash - Contraseña hasheada (ya procesada por bcrypt).
- * @param {string} phone - Teléfono del usuario (opcional).
- * @param {string} address - Dirección del usuario (opcional).
  * @returns {Promise<Object>} El objeto del usuario creado.
  */
-export const createUser = async (name, email, passwordHash, phone = null, address = null) => {
+export const createUser = async (name, email, passwordHash) => {
     // Busca el ID del rol 'member' (asumiendo que lo tienes en la tabla roles)
     const roleIdQuery = `SELECT id FROM roles WHERE name = 'member'`;
     let roleIdResult;
@@ -53,11 +51,11 @@ export const createUser = async (name, email, passwordHash, phone = null, addres
 
     // Insertar el nuevo usuario
     const sql = `
-        INSERT INTO users (role_id, name, email, password_hash, phone, address)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, name, email, phone, address, role_id;
+        INSERT INTO users (role_id, name, email, password_hash)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, name, email, role_id;
     `;
-    const params = [roleId, name, email, passwordHash, phone, address];
+    const params = [roleId, name, email, passwordHash];
 
     try {
         const result = await pool.query(sql, params);
@@ -80,7 +78,7 @@ export const createUser = async (name, email, passwordHash, phone = null, addres
 export const getUserById = async (userId) => {
     const sql = `
         SELECT 
-            u.id, u.name, u.email, u.password_hash, u.role_id, u.phone, u.address, u.created_at,
+            u.id, u.name, u.email, u.password_hash, u.role_id, u.created_at,
             r.name as role_name
         FROM 
             users u
@@ -99,24 +97,22 @@ export const getUserById = async (userId) => {
 };
 
 /**
- * Actualiza el perfil del usuario (nombre, email, teléfono y dirección)
+ * Actualiza el perfil del usuario (nombre y email)
  * @param {string} userId - UUID del usuario
  * @param {string} name - Nuevo nombre
  * @param {string} email - Nuevo email
- * @param {string} phone - Nuevo teléfono (opcional)
- * @param {string} address - Nueva dirección (opcional)
  * @returns {Promise<Object>} El usuario actualizado
  */
-export const updateUserProfile = async (userId, name, email, phone = null, address = null) => {
+export const updateUserProfile = async (userId, name, email) => {
     const sql = `
         UPDATE users 
-        SET name = $1, email = $2, phone = $3, address = $4
-        WHERE id = $5
-        RETURNING id, name, email, phone, address, role_id, created_at;
+        SET name = $1, email = $2
+        WHERE id = $3
+        RETURNING id, name, email, role_id, created_at;
     `;
     
     try {
-        const result = await pool.query(sql, [name, email, phone, address, userId]);
+        const result = await pool.query(sql, [name, email, userId]);
         return result.rows[0] || null;
     } catch (error) {
         console.error("Error al actualizar perfil:", error);

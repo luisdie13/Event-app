@@ -113,7 +113,7 @@ const EditEventForm = ({ eventData, onCancel, onSuccess }) => {
             {/* Título */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">Título</label>
-              <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3" />
+              <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 text-gray-900" />
             </div>
 
             {/* Categoría */}
@@ -122,7 +122,7 @@ const EditEventForm = ({ eventData, onCancel, onSuccess }) => {
               <select id="category_id" name="category_id" 
                       // Usar el ID numérico para el value
                       value={formData.category_id || formData.categoryid || eventData.category_id} 
-                      onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 bg-white">
+                      onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 bg-white text-gray-900">
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
@@ -132,13 +132,13 @@ const EditEventForm = ({ eventData, onCancel, onSuccess }) => {
             {/* Fecha y Hora */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="dateTime">Fecha y Hora</label>
-              <input type="datetime-local" id="dateTime" name="dateTime" value={formData.dateTime} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3"/>
+              <input type="datetime-local" id="dateTime" name="dateTime" value={formData.dateTime} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 text-gray-900"/>
             </div>
 
             {/* Lugar */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">Ubicación</label>
-              <input type="text" id="location" name="location" value={formData.location} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3" />
+              <input type="text" id="location" name="location" value={formData.location} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 text-gray-900" />
             </div>
             
             {/* Imagen Principal URL */}
@@ -148,7 +148,7 @@ const EditEventForm = ({ eventData, onCancel, onSuccess }) => {
                   pero la pasamos aquí como un campo simple para el PUT 
                   asumiendo que se actualiza la imagen principal
               */}
-              <input type="url" id="mainImageUrl" name="mainImageUrl" value={formData.mainImageUrl || eventData.main_image_url} onChange={handleChange} className="shadow border rounded w-full py-3 px-3" />
+              <input type="url" id="mainImageUrl" name="mainImageUrl" value={formData.mainImageUrl || eventData.main_image_url} onChange={handleChange} className="shadow border rounded w-full py-3 px-3 text-gray-900" />
               {formData.mainImageUrl && (
                   <img src={formData.mainImageUrl} alt="Preview" className="mt-2 w-full h-32 object-cover rounded" />
               )}
@@ -160,19 +160,19 @@ const EditEventForm = ({ eventData, onCancel, onSuccess }) => {
             {/* Descripción */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">Descripción</label>
-              <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="6" required className="shadow border rounded w-full py-3 px-3 resize-none"></textarea>
+              <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="6" required className="shadow border rounded w-full py-3 px-3 resize-none text-gray-900"></textarea>
             </div>
 
             {/* Tickets Totales */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="total_tickets">Tickets Totales</label>
-              <input type="number" id="total_tickets" name="total_tickets" value={formData.total_tickets} onChange={handleChange} required min="1" className="shadow border rounded w-full py-3 px-3" />
+              <input type="number" id="total_tickets" name="total_tickets" value={formData.total_tickets} onChange={handleChange} required min="1" className="shadow border rounded w-full py-3 px-3 text-gray-900" />
             </div>
 
             {/* Precio */}
             <div className="mb-6">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">Precio (USD)</label>
-              <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} required min="0.00" step="0.01" className="shadow border rounded w-full py-3 px-3" />
+              <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} required min="0.00" step="0.01" className="shadow border rounded w-full py-3 px-3 text-gray-900" />
             </div>
 
             {/* Botón de Actualizar */}

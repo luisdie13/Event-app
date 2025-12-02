@@ -10,7 +10,7 @@ export const createOrder = async (req, res) => {
     const userId = req.user.id;
     // Accept both eventId (camelCase) and event_id (snake_case) for compatibility
     const eventId = req.body.eventId || req.body.event_id;
-    const { quantity } = req.body;
+    const { quantity, cardId } = req.body;
 
     // 2. Validación de datos
     if (!eventId || !quantity || quantity < 1) {
@@ -18,7 +18,7 @@ export const createOrder = async (req, res) => {
     }
 
     try {
-        const result = await createOrderTransaction(userId, eventId, quantity);
+        const result = await createOrderTransaction(userId, eventId, quantity, cardId);
         
         res.status(201).json({
             message: "¡Compra realizada con éxito!",
@@ -50,9 +50,12 @@ export const getMyTickets = async (req, res) => {
         return res.status(401).json({ message: "No autorizado. Inicie sesión nuevamente." });
     }
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
     try {
-        const tickets = await getUserTickets(req.user.id);
-        res.status(200).json(tickets);
+        const result = await getUserTickets(req.user.id, page, limit);
+        res.status(200).json(result);
     } catch (error) {
         console.error("Error obteniendo tickets:", error.message);
         res.status(500).json({ message: "Error al obtener el historial de tickets." });

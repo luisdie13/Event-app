@@ -8,7 +8,7 @@ import { updateEventData } from '../database/adminEventQueries.js'; // Función 
  */
 export const getAllEventsForAdmin = async (req, res) => {
     try {
-        // CORREGIDO: Consulta que trae todos los datos necesarios para la tabla de administración y el formulario de edición.
+        // Consulta que trae todos los datos necesarios para la tabla de administración y el formulario de edición.
         const result = await pool.query(`
             SELECT 
                 e.id, 

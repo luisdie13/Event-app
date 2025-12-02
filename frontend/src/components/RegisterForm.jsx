@@ -10,6 +10,8 @@ const RegisterForm = () => {
     name: '',
     email: '',
     password: '',
+    phone: '',
+    address: '',
   });
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -107,7 +109,7 @@ const RegisterForm = () => {
         </div>
 
         {/* Campo Contraseña */}
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">Contraseña</label>
           <input
             type="password"
@@ -116,8 +118,40 @@ const RegisterForm = () => {
             value={formData.password}
             onChange={handleChange}
             required
-            className="shadow appearance-none border rounded w-full py-3 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="shadow appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Mínimo 6 caracteres"
+          />
+        </div>
+
+        {/* Campo Teléfono */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
+            Teléfono <span className="text-gray-400 font-normal">(Opcional)</span>
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="+502 1234-5678"
+          />
+        </div>
+
+        {/* Campo Dirección */}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
+            Dirección <span className="text-gray-400 font-normal">(Opcional)</span>
+          </label>
+          <textarea
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            rows="2"
+            className="shadow appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Calle, ciudad, país"
           />
         </div>
 

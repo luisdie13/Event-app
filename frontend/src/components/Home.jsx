@@ -3,11 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import EventCard from './EventCard';
+import Pagination from './Pagination';
 
 const API_URL = 'http://localhost:3001';
 
 const Home = () => {
   const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalEvents: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { isAdmin } = useAuth();
@@ -22,15 +28,23 @@ const Home = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      setLoading(true);
       try {
-        const response = await fetch(`${API_URL}/api/events/featured`);
+        const response = await fetch(
+          `${API_URL}/api/events/featured?page=${pagination.currentPage}&limit=6`
+        );
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        setFeaturedEvents(data);
+        setFeaturedEvents(data.events || []);
+        setPagination({
+          currentPage: data.pagination?.currentPage || 1,
+          totalPages: data.pagination?.totalPages || 1,
+          totalEvents: data.pagination?.totalEvents || 0
+        });
       } catch (e) {
         console.error("Error fetching featured events:", e);
         setError("Error al cargar eventos destacados.");
@@ -40,7 +54,12 @@ const Home = () => {
     };
 
     fetchEvents();
-  }, []);
+  }, [pagination.currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (loading) return <div className="text-center mt-10 text-xl">Cargando carrusel de eventos...</div>;
   if (error) return <div className="text-center mt-10 text-xl text-red-500">{error}</div>;
@@ -62,30 +81,72 @@ const Home = () => {
       </div>
 
       {/* Spacer */}
-      <div className="h-24"></div>
+      <div className="h-12"></div>
+
+      {/* Search Bar */}
+      <div className="w-full flex justify-center px-4">
+        <div className="w-full max-w-md mb-12">
+          <form onSubmit={(e) => { 
+            e.preventDefault(); 
+            const searchValue = e.target.search.value;
+            if (searchValue.trim()) {
+              navigate(`/events?search=${encodeURIComponent(searchValue)}`);
+            } else {
+              navigate('/events');
+            }
+          }}>
+            <input
+              type="text"
+              name="search"
+              placeholder="🔍 Busca tus eventos por nombre..."
+              className="w-full px-6 py-4 rounded-lg border border-slate-600 bg-slate-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-500 shadow-lg text-lg text-center"
+              autoComplete="off"
+            />
+          </form>
+        </div>
+      </div>
 
       {/* Featured Events Section */}
       <div className="flex-grow flex flex-col items-center px-4 pb-20">
-        <h2 className="text-3xl font-bold text-white text-center mb-20 w-full">
-          Eventos Destacados
-        </h2>
-        <div className="h-24"></div>
-        
-        {featuredEvents.length === 0 ? (
-          <div className="text-center py-16 bg-slate-700 rounded-xl shadow-sm max-w-2xl mx-auto">
-            <div className="text-6xl mb-4">🎭</div>
-            <p className="text-xl text-gray-300 mb-2">No hay eventos destacados disponibles</p>
-            <p className="text-gray-400">¡Vuelve pronto para descubrir nuevos eventos!</p>
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
-              {featuredEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+        <div className="w-full max-w-7xl">
+          <h2 className="text-3xl font-bold text-white text-center mb-8 w-full">
+            Eventos Destacados
+          </h2>
+          
+          {pagination.totalEvents > 0 && (
+            <p className="text-gray-300 text-center mb-12">
+              Mostrando <span className="font-semibold text-white">{featuredEvents.length}</span> de{' '}
+              <span className="font-semibold text-white">{pagination.totalEvents}</span> eventos destacados
+            </p>
+          )}
+          
+          <div className="h-12"></div>
+          
+          {featuredEvents.length === 0 ? (
+            <div className="text-center py-16 bg-slate-700 rounded-xl shadow-sm max-w-2xl mx-auto">
+              <div className="text-6xl mb-4">🎭</div>
+              <p className="text-xl text-gray-300 mb-2">No hay eventos destacados disponibles</p>
+              <p className="text-gray-400">¡Vuelve pronto para descubrir nuevos eventos!</p>
             </div>
-          </div>
-        )}
+          ) : (
+            <>
+              <div className="flex justify-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+                  {featuredEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              </div>
+              
+              {/* Pagination */}
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
+          )}
+        </div>
       </div>
 
       {/* Footer - Call to Action Section */}

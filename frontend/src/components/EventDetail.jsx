@@ -1,6 +1,6 @@
 // frontend/src/components/EventDetail.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Importamos useNavigate
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 const API_URL = 'http://localhost:3001';
 
@@ -18,7 +18,9 @@ const formatDate = (dateTimeStr) => {
 
 const EventDetail = () => {
   const { slug } = useParams(); 
-  const navigate = useNavigate(); // Hook para navegación
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromTickets = searchParams.get('from') === 'tickets'; // Detectar si viene de Mis Tickets
   
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ const EventDetail = () => {
   }
   
   const formattedDate = formatDate(event.date_time);
-  const price = parseFloat(event.price) > 0 ? `Q${event.price}` : 'Gratis'; // Ajusté a Quetzales (Q) según tu contexto anterior
+  const price = parseFloat(event.price) > 0 ? `$${event.price}` : 'Gratis';
   
   const mainImageUrl = event.image_urls && event.image_urls.length > 0 
                        ? event.image_urls[0] 
@@ -149,46 +151,94 @@ const EventDetail = () => {
                 </div>
             </div>
 
-            {/* Columna de Compra (Derecha) */}
+            {/* Columna de Compra o Información de Ticket (Derecha) */}
             <div className="lg:w-1/3">
                 <div className="sticky top-24 bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
-                    <div className="text-center mb-6">
-                        <p className="text-gray-400 text-sm uppercase tracking-wide font-semibold">Precio por entrada</p>
-                        <p className="text-4xl font-extrabold text-primary-600 mt-1">
-                            {price}
-                        </p>
-                    </div>
-                    
-                    {/* 👇 AQUÍ ESTÁ EL CAMBIO IMPORTANTE */}
-                    <button 
-                        onClick={handleBuyClick}
-                        disabled={event.available_tickets <= 0}
-                        className={`w-full py-4 rounded-xl text-lg font-bold shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${
-                            event.available_tickets > 0
-                            ? 'bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
-                    >
-                        {event.available_tickets > 0 ? '¡Comprar Tickets Ahora!' : 'Agotado'}
-                    </button>
+                    {fromTickets ? (
+                        /* Información para acceder al código QR */
+                        <>
+                            <div className="text-center mb-6">
+                                <div className="bg-green-100 p-4 rounded-full inline-block mb-4">
+                                    <span className="text-5xl">🎫</span>
+                                </div>
+                                <h3 className="text-2xl font-bold text-white mb-2">¡Ya tienes tu ticket!</h3>
+                                <p className="text-gray-400 text-sm">Accede a tu entrada para el evento</p>
+                            </div>
 
-                    <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-400">
-                        {event.available_tickets > 0 ? (
-                            <>
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                Quedan {event.available_tickets} tickets disponibles
-                            </>
-                        ) : (
-                            <>
-                                <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                Venta finalizada
-                            </>
-                        )}
-                    </div>
-                    
-                    <p className="text-xs text-gray-500 text-center mt-6 pt-4 border-t border-slate-700">
-                        Pago seguro con tarjeta de crédito o débito.
-                    </p>
+                            <div className="bg-slate-700 p-6 rounded-xl mb-6">
+                                <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                    <span>📧</span> Código QR en tu Email
+                                </h4>
+                                <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+                                    Tu código QR de entrada ha sido enviado a tu correo electrónico.
+                                </p>
+                                
+                                <div className="bg-slate-600 p-4 rounded-lg mb-4">
+                                    <p className="text-xs text-gray-400 mb-2">Para encontrar tu entrada:</p>
+                                    <ol className="text-sm text-gray-200 space-y-2 list-decimal list-inside">
+                                        <li>Abre tu correo electrónico</li>
+                                        <li>Busca: <span className="font-bold text-blue-400">"Confirmación de compra"</span></li>
+                                        <li>Descarga el código QR adjunto</li>
+                                        <li>Preséntalo en la entrada del evento</li>
+                                    </ol>
+                                </div>
+
+                                <div className="flex items-start gap-2 bg-blue-900/30 p-3 rounded-lg border border-blue-700">
+                                    <span className="text-blue-400 text-xl">💡</span>
+                                    <p className="text-xs text-blue-200">
+                                        <strong>Tip:</strong> Guarda el código QR en tu teléfono para acceder más fácilmente el día del evento.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => navigate('/my-tickets')}
+                                className="w-full py-3 rounded-xl text-base font-semibold bg-slate-600 hover:bg-slate-500 text-white transition-all"
+                            >
+                                ← Volver a Mis Tickets
+                            </button>
+                        </>
+                    ) : (
+                        /* Formulario de compra normal */
+                        <>
+                            <div className="text-center mb-6">
+                                <p className="text-gray-400 text-sm uppercase tracking-wide font-semibold">Precio por entrada</p>
+                                <p className="text-4xl font-extrabold text-primary-600 mt-1">
+                                    {price}
+                                </p>
+                            </div>
+                            
+                            <button 
+                                onClick={handleBuyClick}
+                                disabled={event.available_tickets <= 0}
+                                className={`w-full py-4 rounded-xl text-lg font-bold shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${
+                                    event.available_tickets > 0
+                                    ? 'bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                            >
+                                {event.available_tickets > 0 ? '¡Comprar Tickets Ahora!' : 'Agotado'}
+                            </button>
+
+                            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-400">
+                                {event.available_tickets > 0 ? (
+                                    <>
+                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                        Quedan {event.available_tickets} tickets disponibles
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                        Venta finalizada
+                                    </>
+                                )}
+                            </div>
+                            
+                            <p className="text-xs text-gray-500 text-center mt-6 pt-4 border-t border-slate-700">
+                                Pago seguro con tarjeta de crédito o débito.
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

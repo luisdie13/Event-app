@@ -14,11 +14,11 @@ const SALT_ROUNDS = 10;
  * Registra un nuevo usuario.
  */
 export const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, address } = req.body;
 
     // 1. Validación básica de entrada
     if (!name || !email || !password) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+        return res.status(400).json({ message: 'Nombre, email y contraseña son obligatorios.' });
     }
 
     try {
@@ -31,8 +31,8 @@ export const registerUser = async (req, res) => {
         // 3. Hashear la contraseña
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-        // 4. Crear el usuario en la DB
-        const newUser = await createUser(name, email, passwordHash);
+        // 4. Crear el usuario en la DB (con campos opcionales)
+        const newUser = await createUser(name, email, passwordHash, phone, address);
 
         // 5. Generar un JWT para la sesión
         const token = jwt.sign(
@@ -49,6 +49,8 @@ export const registerUser = async (req, res) => {
                 id: newUser.id,
                 name: newUser.name,
                 email: newUser.email,
+                phone: newUser.phone,
+                address: newUser.address,
                 role_id: newUser.role_id,
             }
         });

@@ -31,9 +31,11 @@ export const findUserByEmail = async (email) => {
  * @param {string} name - Nombre del usuario.
  * @param {string} email - Email único del usuario.
  * @param {string} passwordHash - Contraseña hasheada (ya procesada por bcrypt).
+ * @param {string} phone - Teléfono del usuario (opcional).
+ * @param {string} address - Dirección del usuario (opcional).
  * @returns {Promise<Object>} El objeto del usuario creado.
  */
-export const createUser = async (name, email, passwordHash) => {
+export const createUser = async (name, email, passwordHash, phone = null, address = null) => {
     // Busca el ID del rol 'member' (asumiendo que lo tienes en la tabla roles)
     const roleIdQuery = `SELECT id FROM roles WHERE name = 'member'`;
     let roleIdResult;
@@ -51,11 +53,11 @@ export const createUser = async (name, email, passwordHash) => {
 
     // Insertar el nuevo usuario
     const sql = `
-        INSERT INTO users (role_id, name, email, password_hash)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, name, email, role_id;
+        INSERT INTO users (role_id, name, email, password_hash, phone, address)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, name, email, phone, address, role_id;
     `;
-    const params = [roleId, name, email, passwordHash];
+    const params = [roleId, name, email, passwordHash, phone, address];
 
     try {
         const result = await pool.query(sql, params);
@@ -67,5 +69,78 @@ export const createUser = async (name, email, passwordHash) => {
         }
         console.error("Error al crear usuario:", error);
         throw new Error("Error interno al crear el usuario.");
+    }
+};
+
+/**
+ * Busca un usuario por su ID
+ * @param {string} userId - UUID del usuario
+ * @returns {Promise<Object | null>} El objeto del usuario o null si no existe
+ */
+export const getUserById = async (userId) => {
+    const sql = `
+        SELECT 
+            u.id, u.name, u.email, u.password_hash, u.role_id, u.phone, u.address, u.created_at,
+            r.name as role_name
+        FROM 
+            users u
+        LEFT JOIN roles r ON u.role_id = r.id
+        WHERE 
+            u.id = $1;
+    `;
+    
+    try {
+        const result = await pool.query(sql, [userId]);
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error("Error al buscar usuario por ID:", error);
+        throw new Error("Error interno al acceder a la base de datos.");
+    }
+};
+
+/**
+ * Actualiza el perfil del usuario (nombre, email, teléfono y dirección)
+ * @param {string} userId - UUID del usuario
+ * @param {string} name - Nuevo nombre
+ * @param {string} email - Nuevo email
+ * @param {string} phone - Nuevo teléfono (opcional)
+ * @param {string} address - Nueva dirección (opcional)
+ * @returns {Promise<Object>} El usuario actualizado
+ */
+export const updateUserProfile = async (userId, name, email, phone = null, address = null) => {
+    const sql = `
+        UPDATE users 
+        SET name = $1, email = $2, phone = $3, address = $4
+        WHERE id = $5
+        RETURNING id, name, email, phone, address, role_id, created_at;
+    `;
+    
+    try {
+        const result = await pool.query(sql, [name, email, phone, address, userId]);
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error("Error al actualizar perfil:", error);
+        throw error; // Propagar error para manejo de duplicados
+    }
+};
+
+/**
+ * Actualiza la contraseña del usuario
+ * @param {string} userId - UUID del usuario
+ * @param {string} newPasswordHash - Nueva contraseña hasheada
+ * @returns {Promise<void>}
+ */
+export const updateUserPassword = async (userId, newPasswordHash) => {
+    const sql = `
+        UPDATE users 
+        SET password_hash = $1
+        WHERE id = $2;
+    `;
+    
+    try {
+        await pool.query(sql, [newPasswordHash, userId]);
+    } catch (error) {
+        console.error("Error al actualizar contraseña:", error);
+        throw new Error("Error interno al actualizar la contraseña.");
     }
 };

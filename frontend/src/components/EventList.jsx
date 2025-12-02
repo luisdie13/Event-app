@@ -1,15 +1,32 @@
 // frontend/src/components/EventList.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import EventCard from './EventCard'; // Reusa el componente de tarjeta
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import EventCard from './EventCard';
+import Pagination from './Pagination';
+import SearchFilters from './SearchFilters';
 
 const API_URL = 'http://localhost:3001';
 
 const EventList = () => {
   // Obtiene el parámetro 'categorySlug' de la URL (si existe)
-  const { categorySlug } = useParams(); 
+  const { categorySlug } = useParams();
+  const [searchParams] = useSearchParams();
   
   const [events, setEvents] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalEvents: 0
+  });
+  const [filters, setFilters] = useState({
+    search: searchParams.get('search') || '',
+    minPrice: '',
+    maxPrice: '',
+    dateFrom: '',
+    dateTo: '',
+    location: '',
+    sortBy: 'date_asc'
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -20,14 +37,30 @@ const EventList = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      setLoading(true);
+      // Solo mostrar loading en la carga inicial, no durante búsquedas
+      if (events.length === 0) {
+        setLoading(true);
+      }
       setError(null);
 
-      // Define la URL de la API:
-      // Si hay categorySlug, usa la ruta de categoría. Si no, usa la ruta general.
+      // Construir query params
+      const queryParams = new URLSearchParams({
+        page: pagination.currentPage,
+        limit: 9,
+        ...filters
+      });
+
+      // Filtrar valores vacíos
+      for (let [key, value] of Array.from(queryParams.entries())) {
+        if (!value || value === '') {
+          queryParams.delete(key);
+        }
+      }
+
+      // Define la URL de la API con paginación y filtros
       const endpoint = categorySlug 
-        ? `${API_URL}/api/events/category/${categorySlug}` 
-        : `${API_URL}/api/events`;
+        ? `${API_URL}/api/events/category/${categorySlug}?${queryParams}` 
+        : `${API_URL}/api/events?${queryParams}`;
 
       try {
         const response = await fetch(endpoint);
@@ -37,7 +70,12 @@ const EventList = () => {
         }
 
         const data = await response.json();
-        setEvents(data);
+        setEvents(data.events || []);
+        setPagination({
+          currentPage: data.pagination?.currentPage || 1,
+          totalPages: data.pagination?.totalPages || 1,
+          totalEvents: data.pagination?.totalEvents || 0
+        });
       } catch (e) {
         console.error("Error fetching events:", e);
         setError("Error al cargar eventos. Inténtalo de nuevo.");
@@ -47,9 +85,40 @@ const EventList = () => {
     };
 
     fetchEvents();
-  }, [categorySlug]); // Dependencia: re-ejecuta el fetch si el categorySlug de la URL cambia
+  }, [categorySlug, pagination.currentPage, filters]);
 
-  if (loading) return <div className="text-center mt-10 text-xl">Cargando lista de eventos...</div>;
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFilterChange = useCallback((newFilters) => {
+    setFilters(newFilters);
+    setPagination(prev => ({ ...prev, currentPage: 1 })); // Reset to page 1 when filters change
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setFilters({
+      search: '',
+      minPrice: '',
+      maxPrice: '',
+      dateFrom: '',
+      dateTo: '',
+      location: '',
+      sortBy: 'date_asc'
+    });
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  }, []);
+
+  // Reset page to 1 when category changes (pero mantener búsqueda)
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  }, [categorySlug]);
+
+  if (loading && events.length === 0) {
+    return <div className="text-center mt-10 text-xl">Cargando lista de eventos...</div>;
+  }
+  
   if (error) return <div className="text-center mt-10 text-xl text-red-500">{error}</div>;
 
   return (
@@ -69,12 +138,21 @@ const EventList = () => {
       </div>
 
       {/* Spacer */}
-      <div className="h-24"></div>
+      <div className="h-12"></div>
+
+      {/* Search and Filters */}
+      <div className="w-full flex justify-center">
+        <SearchFilters 
+          onFilterChange={handleFilterChange}
+          onReset={handleResetFilters}
+          currentSearch={filters.search}
+        />
+      </div>
 
       {/* Events Grid */}
-      <div className="flex-grow flex flex-col items-center px-4 pb-20">
+      <div className="flex-grow flex flex-col items-center justify-center px-4 pb-20">
         {events.length === 0 ? (
-          <div className="text-center py-16 bg-slate-700 rounded-xl shadow-sm max-w-2xl mx-auto">
+          <div className="text-center py-16 bg-slate-700 rounded-xl shadow-sm max-w-2xl w-full mx-auto">
             <div className="text-6xl mb-4">🔍</div>
             <p className="text-xl text-gray-300 mb-2">
               No se encontraron eventos {categorySlug ? `para la categoría "${categorySlug}"` : 'disponibles'}
@@ -82,21 +160,29 @@ const EventList = () => {
             <p className="text-gray-400">Intenta explorar otras categorías</p>
           </div>
         ) : (
-          <>
+          <div className="w-full max-w-7xl">
             <div className="flex justify-center mb-12 w-full">
               <p className="text-gray-300 text-center">
-                Mostrando <span className="font-semibold text-white">{events.length}</span> evento{events.length !== 1 ? 's' : ''}
+                Mostrando <span className="font-semibold text-white">{events.length}</span> de{' '}
+                <span className="font-semibold text-white">{pagination.totalEvents}</span> evento{pagination.totalEvents !== 1 ? 's' : ''}
               </p>
             </div>
             <div className="h-12"></div>
             <div className="flex justify-center w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
-              {events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+                {events.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
               </div>
             </div>
-          </>
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         )}
       </div>
     </div>

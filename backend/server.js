@@ -11,9 +11,8 @@ import eventRoutes from './routes/eventRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js'; 
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js'; 
-
-// 👇 1. NUEVA IMPORTACIÓN: Rutas de órdenes (compras)
-import orderRoutes from './routes/orderRoutes.js'; 
+import orderRoutes from './routes/orderRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Inicialización de Express
 const app = express();
@@ -43,9 +42,8 @@ app.use('/api/events', eventRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-
-// 👇 2. REGISTRO DE LA NUEVA RUTA DE ÓRDENES
-app.use('/api/orders', orderRoutes); 
+app.use('/api/orders', orderRoutes);
+app.use('/api/users', userRoutes);
 
 
 // Inicio del Servidor

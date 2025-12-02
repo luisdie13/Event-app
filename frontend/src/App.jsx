@@ -12,9 +12,10 @@ import LoginForm from './components/LoginForm';
 import CreateEventForm from './components/CreateEventForm';
 import AdminDashboard from './components/AdminDashboard';
 import MyTickets from './components/MyTickets';
+import Profile from './components/Profile';
 
 // Importación de Páginas (Nuevas)
-import CheckoutPage from './pages/CheckoutPage'; // 👈 NUEVO: Asegúrate de que la ruta sea correcta
+import CheckoutPage from './pages/CheckoutPage';
 
 // Importación de Rutas Protegidas
 import AdminRoute from './components/AdminRoute';
@@ -41,6 +42,9 @@ function App() {
         
         {/* --- Ruta para ver tickets del usuario --- */}
         <Route path="/my-tickets" element={<MyTickets />} />
+        
+        {/* --- Ruta para perfil de usuario --- */}
+        <Route path="/profile" element={<Profile />} />
 
         {/* --- Rutas de Administración (Protegidas por Rol) --- */}
         <Route path="/admin" element={<AdminRoute />}>

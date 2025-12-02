@@ -5,9 +5,20 @@ import { pool } from './db.js';
 
 /**
  * Obtiene una lista de eventos marcados como destacados (is_featured = TRUE).
- * @returns {Promise<Array>} Array de objetos de eventos.
+ * @param {number} page - Número de página (por defecto 1)
+ * @param {number} limit - Eventos por página (por defecto 6)
+ * @returns {Promise<Object>} Objeto con eventos y metadatos de paginación
  */
-export const getFeaturedEvents = async () => {
+export const getFeaturedEvents = async (page = 1, limit = 6) => {
+    const offset = (page - 1) * limit;
+
+    // Consulta para obtener el total de eventos destacados
+    const countSql = `
+        SELECT COUNT(*) as total
+        FROM events e
+        WHERE e.is_featured = TRUE AND e.date_time >= NOW()
+    `;
+
     const sql = `
         SELECT 
             e.id, 
@@ -27,14 +38,28 @@ export const getFeaturedEvents = async () => {
             e.is_featured = TRUE AND e.date_time >= NOW()
         ORDER BY 
             e.date_time ASC
-        LIMIT 
-            10;
+        LIMIT $1 OFFSET $2;
     `;
 
     try {
-        // 👇 USO DE POOL
-        const result = await pool.query(sql);
-        return result.rows;
+        // Obtener el total de eventos
+        const countResult = await pool.query(countSql);
+        const total = parseInt(countResult.rows[0].total);
+        
+        // Obtener los eventos paginados
+        const result = await pool.query(sql, [limit, offset]);
+        
+        return {
+            events: result.rows,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalEvents: total,
+                eventsPerPage: limit,
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
+        };
     } catch (error) {
         console.error("Error al obtener eventos destacados:", error);
         throw new Error("No se pudieron obtener los eventos destacados de la base de datos.");
@@ -42,11 +67,23 @@ export const getFeaturedEvents = async () => {
 };
 
 /**
- * Obtiene todos los eventos, opcionalmente filtrados por slug de categoría.
- * @param {string} categorySlug - El slug de la categoría para filtrar.
- * @returns {Promise<Array>} Array de objetos de eventos.
+ * Obtiene todos los eventos con filtros avanzados.
+ * @param {Object} filters - Objeto con filtros (categorySlug, search, minPrice, maxPrice, dateFrom, dateTo, location, sortBy)
+ * @param {number} page - Número de página (por defecto 1)
+ * @param {number} limit - Eventos por página (por defecto 9)
+ * @returns {Promise<Object>} Objeto con eventos y metadatos de paginación
  */
-export const getEventsList = async (categorySlug) => {
+export const getEventsList = async (filters = {}, page = 1, limit = 9) => {
+    const offset = (page - 1) * limit;
+    const { categorySlug, search, minPrice, maxPrice, dateFrom, dateTo, location, sortBy } = filters;
+    
+    let countSql = `
+        SELECT COUNT(*) as total
+        FROM events e
+        JOIN categories c ON e.category_id = c.id
+        WHERE e.date_time >= NOW()
+    `;
+    
     let sql = `
         SELECT 
             e.id, 
@@ -66,18 +103,123 @@ export const getEventsList = async (categorySlug) => {
     `;
     
     const params = [];
+    const countParams = [];
+    let paramIndex = 1;
 
+    // Filtro por categoría
     if (categorySlug) {
-        sql += ` AND c.slug = $1`;
+        sql += ` AND c.slug = $${paramIndex}`;
+        countSql += ` AND c.slug = $${paramIndex}`;
         params.push(categorySlug);
+        countParams.push(categorySlug);
+        paramIndex++;
     }
 
-    sql += ` ORDER BY e.date_time ASC LIMIT 10`;
+    // Filtro por búsqueda de texto (título o descripción)
+    if (search && search.trim() !== '') {
+        sql += ` AND (LOWER(e.title) LIKE $${paramIndex} OR LOWER(e.description) LIKE $${paramIndex})`;
+        countSql += ` AND (LOWER(e.title) LIKE $${paramIndex} OR LOWER(e.description) LIKE $${paramIndex})`;
+        const searchPattern = `%${search.toLowerCase()}%`;
+        params.push(searchPattern);
+        countParams.push(searchPattern);
+        paramIndex++;
+    }
+
+    // Filtro por precio mínimo
+    if (minPrice !== undefined && minPrice !== null && minPrice !== '') {
+        sql += ` AND e.price >= $${paramIndex}`;
+        countSql += ` AND e.price >= $${paramIndex}`;
+        params.push(parseFloat(minPrice));
+        countParams.push(parseFloat(minPrice));
+        paramIndex++;
+    }
+
+    // Filtro por precio máximo
+    if (maxPrice !== undefined && maxPrice !== null && maxPrice !== '') {
+        sql += ` AND e.price <= $${paramIndex}`;
+        countSql += ` AND e.price <= $${paramIndex}`;
+        params.push(parseFloat(maxPrice));
+        countParams.push(parseFloat(maxPrice));
+        paramIndex++;
+    }
+
+    // Filtro por fecha desde
+    if (dateFrom) {
+        sql += ` AND e.date_time >= $${paramIndex}`;
+        countSql += ` AND e.date_time >= $${paramIndex}`;
+        params.push(dateFrom);
+        countParams.push(dateFrom);
+        paramIndex++;
+    }
+
+    // Filtro por fecha hasta
+    if (dateTo) {
+        sql += ` AND e.date_time <= $${paramIndex}`;
+        countSql += ` AND e.date_time <= $${paramIndex}`;
+        params.push(dateTo);
+        countParams.push(dateTo);
+        paramIndex++;
+    }
+
+    // Filtro por ubicación
+    if (location && location.trim() !== '') {
+        sql += ` AND LOWER(e.location) LIKE $${paramIndex}`;
+        countSql += ` AND LOWER(e.location) LIKE $${paramIndex}`;
+        const locationPattern = `%${location.toLowerCase()}%`;
+        params.push(locationPattern);
+        countParams.push(locationPattern);
+        paramIndex++;
+    }
+
+    // Ordenamiento
+    let orderClause = 'ORDER BY e.date_time ASC'; // Por defecto: fecha ascendente
+    if (sortBy) {
+        switch(sortBy) {
+            case 'date_asc':
+                orderClause = 'ORDER BY e.date_time ASC';
+                break;
+            case 'date_desc':
+                orderClause = 'ORDER BY e.date_time DESC';
+                break;
+            case 'price_asc':
+                orderClause = 'ORDER BY e.price ASC';
+                break;
+            case 'price_desc':
+                orderClause = 'ORDER BY e.price DESC';
+                break;
+            case 'title_asc':
+                orderClause = 'ORDER BY e.title ASC';
+                break;
+            case 'title_desc':
+                orderClause = 'ORDER BY e.title DESC';
+                break;
+            default:
+                orderClause = 'ORDER BY e.date_time ASC';
+        }
+    }
+
+    sql += ` ${orderClause} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
 
     try {
-        // 👇 USO DE POOL
+        // Obtener el total de eventos
+        const countResult = await pool.query(countSql, countParams);
+        const total = parseInt(countResult.rows[0].total);
+        
+        // Obtener los eventos paginados
         const result = await pool.query(sql, params);
-        return result.rows;
+        
+        return {
+            events: result.rows,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalEvents: total,
+                eventsPerPage: limit,
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
+        };
     } catch (error) {
         console.error("Error al obtener lista de eventos:", error);
         throw new Error("No se pudieron obtener los eventos.");

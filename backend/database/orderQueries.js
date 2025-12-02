@@ -1,7 +1,7 @@
 // backend/database/orderQueries.js
 import { pool } from './db.js';
 
-export const createOrderTransaction = async (userId, eventId, quantity) => {
+export const createOrderTransaction = async (userId, eventId, quantity, cardId = null) => {
     const client = await pool.connect();
 
     try {
@@ -38,14 +38,14 @@ export const createOrderTransaction = async (userId, eventId, quantity) => {
         `;
         await client.query(updateEventSql, [quantity, eventId]);
 
-        // 4. Crear el ticket
+        // 4. Crear el ticket (con card_id si se proporcionó)
         const insertTicketSql = `
-            INSERT INTO tickets (event_id, user_id, quantity, status, total_price, purchase_date)
-            VALUES ($1, $2, $3, 'active', $4, NOW())
+            INSERT INTO tickets (event_id, user_id, quantity, status, total_price, purchase_date, card_id)
+            VALUES ($1, $2, $3, 'active', $4, NOW(), $5)
             RETURNING id;
         `;
         
-        const ticketResult = await client.query(insertTicketSql, [eventId, userId, quantity, totalPrice]);
+        const ticketResult = await client.query(insertTicketSql, [eventId, userId, quantity, totalPrice, cardId]);
 
         await client.query('COMMIT');
         return ticketResult.rows[0];
@@ -60,8 +60,20 @@ export const createOrderTransaction = async (userId, eventId, quantity) => {
     }
 };
 
-export const getUserTickets = async (userId) => {
+export const getUserTickets = async (userId, page = 1, limit = 10) => {
     try {
+        const offset = (page - 1) * limit;
+
+        // Consulta para obtener el total de tickets
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM tickets t
+            WHERE t.user_id = $1
+        `;
+        const countResult = await pool.query(countQuery, [userId]);
+        const total = parseInt(countResult.rows[0].total);
+
+        // Consulta para obtener los tickets paginados
         const query = `
             SELECT 
                 t.id,
@@ -82,10 +94,22 @@ export const getUserTickets = async (userId) => {
             INNER JOIN categories c ON e.category_id = c.id
             WHERE t.user_id = $1
             ORDER BY t.purchase_date DESC
+            LIMIT $2 OFFSET $3
         `;
         
-        const result = await pool.query(query, [userId]);
-        return result.rows;
+        const result = await pool.query(query, [userId, limit, offset]);
+        
+        return {
+            tickets: result.rows,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalTickets: total,
+                ticketsPerPage: limit,
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
+        };
     } catch (error) {
         console.error("Error obteniendo tickets del usuario:", error.message);
         throw error;

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estructura de Base de Datos - Event Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-left: 5px solid #3498db;
+            padding-left: 15px;
+        }
+        
+        h3 {
+            color: #2c3e50;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            background: #ecf0f1;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        
+        .metadata {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .metadata p {
+            margin: 5px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .pk {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .fk {
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .unique {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .diagram {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 2px solid #3498db;
+        }
+        
+        .relationship {
+            background: #fff3cd;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+        }
+        
+        .relationship strong {
+            color: #856404;
+        }
+        
+        .feature {
+            background: #d4edda;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+        
+        .note {
+            background: #d1ecf1;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #17a2b8;
+            border-radius: 4px;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .constraint-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .badge-pk {
+            background: #fee;
+            color: #c00;
+        }
+        
+        .badge-fk {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-unique {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .badge-check {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        ul {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Estructura de Base de Datos</h1>
+        <h2 style="margin-top: 0;">Event Platform - Sistema de Gestión de Eventos</h2>
+        
+        <div class="metadata">
+            <p><strong>Base de Datos:</strong> PostgreSQL 16</p>
+            <p><strong>Extensiones:</strong> uuid-ossp (para generación de UUIDs)</p>
+            <p><strong>Fecha de Generación:</strong> Noviembre 2024</p>
+            <p><strong>Total de Tablas:</strong> 6 (roles, users, categories, events, images, tickets)</p>
+        </div>
+
+        <h2>🔗 Diagrama de Relaciones</h2>
+        
+        <div class="diagram">
+            <pre style="font-family: monospace; line-height: 1.8; font-size: 0.9em;">
+    ┌──────────────┐
+    │    roles     │
+    │──────────────│
+    │ 🔑 id (PK)   │
+    │ name         │
+    │ created_at   │
+    └──────┬───────┘
+           │
+           │ 1:N
+           ▼
+    ┌──────────────────┐
+    │     users        │
+    │──────────────────│
+    │ 🔑 id (PK)       │──────┐
+    │ 🔗 role_id (FK)  │      │
+    │ name             │      │ 1:N
+    │ email (UNIQUE)   │      │
+    │ password_hash    │      │
+    │ created_at       │      ▼
+    │ updated_at       │   ┌──────────────────────┐
+    └──────┬───────────┘   │       events         │
+           │               │──────────────────────│
+           │ 1:N           │ 🔑 id (PK)           │────┐
+           │               │ 🔗 user_id (FK)      │    │
+           ▼               │ 🔗 category_id (FK)  │    │ 1:N
+    ┌──────────────────┐  │ title                │    │
+    │     tickets      │  │ slug (UNIQUE)        │    │
+    │──────────────────│  │ description          │    ▼
+    │ 🔑 id (PK)       │  │ date_time            │ ┌─────────────┐
+    │ 🔗 event_id (FK) │──│ location             │ │   images    │
+    │ 🔗 user_id (FK)  │  │ total_tickets        │ │─────────────│
+    │ purchase_date    │  │ available_tickets    │ │ 🔑 id (PK)  │
+    │ quantity         │  │ price                │ │ 🔗 event_id │
+    │ total_price      │  │ is_featured          │ │ url         │
+    │ status           │  │ created_at           │ │ is_main     │
+    │ created_at       │  │ updated_at           │ │ created_at  │
+    └──────────────────┘  └──────────────────────┘ └─────────────┘
+                                    ▲
+                                    │
+                                    │ N:1
+                          ┌─────────┴──────────┐
+                          │    categories      │
+                          │────────────────────│
+                          │ 🔑 id (PK)         │
+                          │ name (UNIQUE)      │
+                          │ slug (UNIQUE)      │
+                          │ description        │
+                          │ created_at         │
+                          └────────────────────┘
+            </pre>
+        </div>
+
+        <h2>📋 Descripción de Tablas</h2>
+
+        <h3>1. roles - Roles de Usuario</h3>
+        <p><strong>Propósito:</strong> Define los diferentes roles de autorización en el sistema.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Restricciones</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="constraint-badge badge-pk">PK</span> id</td>
+                    <td>SERIAL</td>
+                    <td>PRIMARY KEY</td>
+                    <td>Identificador único del rol</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-unique">UNIQUE</span> name</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NOT NULL, UNIQUE</td>
+                    <td>Nombre del rol (guest, member, organizer, moderator, administrator)</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de creación</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="feature">
+            <strong>Roles Predefinidos:</strong>
+            <ul>
+                <li><strong>guest</strong> (ID: 1) - Usuario invitado</li>
+                <li><strong>member</strong> (ID: 2) - Usuario miembro</li>
+                <li><strong>organizer</strong> (ID: 3) - Organizador de eventos</li>
+                <li><strong>moderator</strong> (ID: 4) - Moderador</li>
+                <li><strong>administrator</strong> (ID: 5) - Administrador del sistema</li>
+            </ul>
+        </div>
+
+        <h3>2. users - Usuarios del Sistema</h3>
+        <p><strong>Propósito:</strong> Almacena información de usuarios con autenticación y autorización.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Restricciones</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="constraint-badge badge-pk">PK</span> id</td>
+                    <td>UUID</td>
+                    <td>PRIMARY KEY, DEFAULT uuid_generate_v4()</td>
+                    <td>Identificador único del usuario</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-fk">FK</span> role_id</td>
+                    <td>INTEGER</td>
+                    <td>NOT NULL, REFERENCES roles(id) ON DELETE RESTRICT</td>
+                    <td>Rol asignado al usuario</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NOT NULL</td>
+                    <td>Nombre completo del usuario</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-unique">UNIQUE</span> email</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL, UNIQUE</td>
+                    <td>Correo electrónico (usado para login)</td>
+                </tr>
+                <tr>
+                    <td>password_hash</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Contraseña hasheada con bcrypt</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de registro</td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de última actualización (auto-actualizado por trigger)</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="feature">
+            <strong>Índices:</strong>
+            <ul>
+                <li><code>idx_users_email</code> - Optimiza búsquedas por email</li>
+            </ul>
+            <strong>Triggers:</strong>
+            <ul>
+                <li><code>update_users_updated_at</code> - Actualiza automáticamente updated_at en cada UPDATE</li>
+            </ul>
+        </div>
+
+        <h3>3. categories - Categorías de Eventos</h3>
+        <p><strong>Propósito:</strong> Organiza eventos en categorías para facilitar navegación y búsqueda.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Restricciones</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="constraint-badge badge-pk">PK</span> id</td>
+                    <td>SERIAL</td>
+                    <td>PRIMARY KEY</td>
+                    <td>Identificador único de la categoría</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-unique">UNIQUE</span> name</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NOT NULL, UNIQUE</td>
+                    <td>Nombre de la categoría</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-unique">UNIQUE</span> slug</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NOT NULL, UNIQUE</td>
+                    <td>Slug URL-friendly</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td>Descripción de la categoría</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de creación</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="feature">
+            <strong>Categorías Predefinidas:</strong>
+            <ul>
+                <li><strong>Música</strong> - Conciertos, festivales y eventos musicales</li>
+                <li><strong>Deportes</strong> - Eventos deportivos y competencias</li>
+                <li><strong>Tecnología</strong> - Conferencias, hackathons y eventos tech</li>
+                <li><strong>Arte</strong> - Exposiciones, galerías y eventos artísticos</li>
+                <li><strong>Educación</strong> - Talleres, seminarios y cursos</li>
+                <li><strong>Negocios</strong> - Networking, conferencias empresariales</li>
+            </ul>
+        </div>
+
+        <h3>4. events - Eventos</h3>
+        <p><strong>Propósito:</strong> Tabla principal que almacena la información de todos los eventos.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Restricciones</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="constraint-badge badge-pk">PK</span> id</td>
+                    <td>UUID</td>
+                    <td>PRIMARY KEY, DEFAULT uuid_generate_v4()</td>
+                    <td>Identificador único del evento</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-fk">FK</span> user_id</td>
+                    <td>UUID</td>
+                    <td>NOT NULL, REFERENCES users(id) ON DELETE CASCADE</td>
+                    <td>Usuario creador del evento</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-fk">FK</span> category_id</td>
+                    <td>INTEGER</td>
+                    <td>NOT NULL, REFERENCES categories(id) ON DELETE RESTRICT</td>
+                    <td>Categoría del evento</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Título del evento</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-unique">UNIQUE</span> slug</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL, UNIQUE</td>
+                    <td>Slug URL-friendly</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td>Descripción detallada del evento</td>
+                </tr>
+                <tr>
+                    <td>date_time</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td>Fecha y hora del evento</td>
+                </tr>
+                <tr>
+                    <td>location</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Ubicación del evento</td>
+                </tr>
+                <tr>
+                    <td>total_tickets</td>
+                    <td>INTEGER</td>
+                    <td>NOT NULL, CHECK (total_tickets > 0)</td>
+                    <td>Total de tickets disponibles</td>
+                </tr>
+                <tr>
+                    <td>available_tickets</td>
+                    <td>INTEGER</td>
+                    <td>NOT NULL, CHECK (available_tickets >= 0 AND available_tickets <= total_tickets)</td>
+                    <td>Tickets disponibles actualmente</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL(10,2)</td>
+                    <td>NOT NULL, CHECK (price >= 0)</td>
+                    <td>Precio por ticket</td>
+                </tr>
+                <tr>
+                    <td>is_featured</td>
+                    <td>BOOLEAN</td>
+                    <td>DEFAULT FALSE</td>
+                    <td>Indica si el evento es destacado</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de creación</td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de última actualización</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="feature">
+            <strong>Índices:</strong>
+            <ul>
+                <li><code>idx_events_slug</code> - Optimiza búsquedas por slug</li>
+                <li><code>idx_events_category</code> - Optimiza filtros por categoría</li>
+                <li><code>idx_events_date</code> - Optimiza ordenamiento por fecha</li>
+                <li><code>idx_events_featured</code> - Optimiza búsqueda de eventos destacados</li>
+            </ul>
+            <strong>Triggers:</strong>
+            <ul>
+                <li><code>update_events_updated_at</code> - Actualiza automáticamente updated_at</li>
+            </ul>
+            <strong>Constraints:</strong>
+            <ul>
+                <li><code>check_available_tickets</code> - Asegura que available_tickets ≤ total_tickets</li>
+            </ul>
+        </div>
+
+        <h3>5. images - Imágenes de Eventos</h3>
+        <p><strong>Propósito:</strong> Almacena las URLs de imágenes asociadas a eventos.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Restricciones</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="constraint-badge badge-pk">PK</span> id</td>
+                    <td>UUID</td>
+                    <td>PRIMARY KEY, DEFAULT uuid_generate_v4()</td>
+                    <td>Identificador único de la imagen</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-fk">FK</span> event_id</td>
+                    <td>UUID</td>
+                    <td>NOT NULL, REFERENCES events(id) ON DELETE CASCADE</td>
+                    <td>Evento al que pertenece la imagen</td>
+                </tr>
+                <tr>
+                    <td>url</td>
+                    <td>TEXT</td>
+                    <td>NOT NULL</td>
+                    <td>URL de la imagen</td>
+                </tr>
+                <tr>
+                    <td>is_main</td>
+                    <td>BOOLEAN</td>
+                    <td>DEFAULT FALSE</td>
+                    <td>Indica si es la imagen principal del evento</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de creación</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="feature">
+            <strong>Índices:</strong>
+            <ul>
+                <li><code>idx_images_event</code> - Optimiza búsquedas de imágenes por evento</li>
+                <li><code>idx_images_main</code> - Optimiza búsqueda de imagen principal</li>
+            </ul>
+        </div>
+
+        <h3>6. tickets - Tickets/Boletos Comprados</h3>
+        <p><strong>Propósito:</strong> Registra las transacciones de compra de tickets por los usuarios.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Restricciones</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="constraint-badge badge-pk">PK</span> id</td>
+                    <td>UUID</td>
+                    <td>PRIMARY KEY, DEFAULT uuid_generate_v4()</td>
+                    <td>Identificador único del ticket</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-fk">FK</span> event_id</td>
+                    <td>UUID</td>
+                    <td>NOT NULL, REFERENCES events(id) ON DELETE CASCADE</td>
+                    <td>Evento para el cual se compró el ticket</td>
+                </tr>
+                <tr>
+                    <td><span class="constraint-badge badge-fk">FK</span> user_id</td>
+                    <td>UUID</td>
+                    <td>NOT NULL, REFERENCES users(id) ON DELETE CASCADE</td>
+                    <td>Usuario que compró el ticket</td>
+                </tr>
+                <tr>
+                    <td>purchase_date</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de compra</td>
+                </tr>
+                <tr>
+                    <td>quantity</td>
+                    <td>INTEGER</td>
+                    <td>NOT NULL, CHECK (quantity > 0)</td>
+                    <td>Cantidad de tickets comprados</td>
+                </tr>
+                <tr>
+                    <td>total_price</td>
+                    <td>DECIMAL(10,2)</td>
+                    <td>NOT NULL, CHECK (total_price >= 0)</td>
+                    <td>Precio total de la transacción</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR(50)</td>
+                    <td>DEFAULT 'active', CHECK (status IN ('active', 'cancelled', 'used'))</td>
+                    <td>Estado del ticket</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>TIMESTAMP</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                    <td>Fecha de creación del registro</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="feature">
+            <strong>Índices:</strong>
+            <ul>
+                <li><code>idx_tickets_event</code> - Optimiza búsquedas por evento</li>
+                <li><code>idx_tickets_user</code> - Optimiza búsqueda de tickets por usuario</li>
+                <li><code>idx_tickets_status</code> - Optimiza filtros por estado</li>
+            </ul>
+            <strong>Estados Válidos:</strong>
+            <ul>
+                <li><strong>active</strong> - Ticket activo y válido</li>
+                <li><strong>cancelled</strong> - Ticket cancelado</li>
+                <li><strong>used</strong> - Ticket ya utilizado</li>
+            </ul>
+        </div>
+
+        <h2>🔐 Relaciones y Claves Foráneas</h2>
+        
+        <div class="relationship">
+            <strong>users → roles</strong> (N:1)
+            <p>Cada usuario tiene un rol. Un rol puede tener múltiples usuarios.</p>
+            <p><code>users.role_id → roles.id (ON DELETE RESTRICT)</code></p>
+            <p>La restricción RESTRICT previene eliminar un rol si tiene usuarios asociados.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>events → users</strong> (N:1)
+            <p>Cada evento es creado por un usuario. Un usuario puede crear múltiples eventos.</p>
+            <p><code>events.user_id → users.id (ON DELETE CASCADE)</code></p>
+            <p>Si se elimina un usuario, se eliminan todos sus eventos.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>events → categories</strong> (N:1)
+            <p>Cada evento pertenece a una categoría. Una categoría puede tener múltiples eventos.</p>
+            <p><code>events.category_id → categories.id (ON DELETE RESTRICT)</code></p>
+            <p>No se puede eliminar una categoría si tiene eventos asociados.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>images → events</strong> (N:1)
+            <p>Cada imagen pertenece a un evento. Un evento puede tener múltiples imágenes.</p>
+            <p><code>images.event_id → events.id (ON DELETE CASCADE)</code></p>
+            <p>Si se elimina un evento, se eliminan todas sus imágenes.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>tickets → events</strong> (N:1)
+            <p>Cada ticket es para un evento específico. Un evento puede tener múltiples tickets vendidos.</p>
+            <p><code>tickets.event_id → events.id (ON DELETE CASCADE)</code></p>
+            <p>Si se elimina un evento, se eliminan todos los tickets asociados.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>tickets → users</strong> (N:1)
+            <p>Cada ticket pertenece a un usuario. Un usuario puede comprar múltiples tickets.</p>
+            <p><code>tickets.user_id → users.id (ON DELETE CASCADE)</code></p>
+            <p>Si se elimina un usuario, se eliminan todos sus tickets.</p>
+        </div>
+
+        <h2>⚙️ Características Técnicas</h2>
+        
+        <div class="feature">
+            <strong>UUIDs:</strong>
+            <p>Las tablas principales (users, events, images, tickets) utilizan UUID v4 como clave primaria, lo que proporciona:</p>
+            <ul>
+                <li>Identificadores únicos globales</li>
+                <li>Mayor seguridad (no secuenciales)</li>
+                <li>Facilita merge de datos entre sistemas</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <strong>Índices Optimizados:</strong>
+            <p>Se han creado índices estratégicos en:</p>
+            <ul>
+                <li>Campos de búsqueda frecuente (email, slug)</li>
+                <li>Claves foráneas para mejorar joins</li>
+                <li>Campos de filtrado común (categoría, fecha, estado)</li>
+                <li>Campos de ordenamiento (fecha de eventos)</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <strong>Triggers Automáticos:</strong>
+            <p>Función <code>update_updated_at_column()</code> que mantiene automáticamente el campo updated_at en:</p>
+            <ul>
+                <li>Tabla users</li>
+                <li>Tabla events</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <strong>Validaciones con CHECK Constraints:</strong>
+            <ul>
+                <li><code>total_tickets > 0</code> - Los eventos deben tener al menos un ticket</li>
+                <li><code>available_tickets >= 0</code> - No pueden haber tickets negativos</li>
+                <li><code>available_tickets <= total_tickets</code> - No puede haber más tickets disponibles que el total</li>
+                <li><code>price >= 0</code> - El precio no puede ser negativo</li>
+                <li><code>quantity > 0</code> - Debe comprarse al menos un ticket</li>
+                <li><code>status IN ('active', 'cancelled', 'used')</code> - Solo estados válidos</li>
+            </ul>
+        </div>
+
+        <h2>💡 Diseño de Integridad Referencial</h2>
+        
+        <div class="note">
+            <h4>Estrategia de DELETE:</h4>
+            <ul>
+                <li><strong>CASCADE:</strong> Se usa cuando los registros hijos deben eliminarse automáticamente al eliminar el padre (events→users, images→events, tickets→events, tickets→users)</li>
+                <li><strong>RESTRICT:</strong> Se usa cuando queremos prevenir la eliminación si hay registros dependientes (users→roles, events→categories)</li>
+            </ul>
+        </div>
+
+        <h2>📊 Resumen de Organización</h2>
+        
+        <div class="feature">
+            <h4>Categorización Clara:</h4>
+            <p>El sistema categoriza eventos en 6 categorías principales: Música, Deportes, Tecnología, Arte, Educación y Negocios. Cada evento debe pertenecer a exactamente una categoría.</p>
+        </div>
+        
+        <div class="feature">
+            <h4>Control de Transacciones:</h4>
+            <p>La tabla <strong>tickets</strong> funciona como registro de transacciones, almacenando:</p>
+            <ul>
+                <li>Quién compró (user_id)</li>
+                <li>Qué compró (event_id)</li>
+                <li>Cuándo compró (purchase_date)</li>
+                <li>Cuánto compró (quantity, total_price)</li>
+                <li>Estado actual (status: active/cancelled/used)</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <h4>Sistema de Roles:</h4>
+            <p>Implementa autorización basada en roles con 5 niveles:</p>
+            <ul>
+                <li><strong>Guest:</strong> Usuarios no registrados (nivel más bajo)</li>
+                <li><strong>Member:</strong> Usuarios registrados que pueden comprar tickets</li>
+                <li><strong>Organizer:</strong> Pueden crear y gestionar eventos</li>
+                <li><strong>Moderator:</strong> Supervisión de contenido</li>
+                <li><strong>Administrator:</strong> Control total del sistema (nivel más alto)</li>
+            </ul>
+        </div>
+
+        <h2>🎯 Casos de Uso Principales</h2>
+        
+        <div class="relationship">
+            <strong>1. Registro de Usuario:</strong>
+            <p>Se crea un registro en <code>users</code> con role_id = 2 (member) por defecto.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>2. Creación de Evento:</strong>
+            <p>Un usuario (organizador o admin) crea un evento que se vincula a una categoría y al usuario creador.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>3. Compra de Tickets:</strong>
+            <p>Se crea un registro en <code>tickets</code> vinculando usuario y evento, y se decrementa <code>available_tickets</code> en <code>events</code>.</p>
+        </div>
+        
+        <div class="relationship">
+            <strong>4. Gestión de Imágenes:</strong>
+            <p>Cada evento puede tener múltiples imágenes, donde una se marca como principal con <code>is_main = true</code>.</p>
+        </div>
+
+        <div class="note">
+            <h4>📌 Notas Importantes:</h4>
+            <ul>
+                <li>Las contraseñas se almacenan hasheadas con bcrypt (nunca en texto plano)</li>
+                <li>Los UUIDs proporcionan identificadores únicos globales y más seguros</li>
+                <li>Los índices mejoran significativamente el rendimiento de consultas comunes</li>
+                <li>Los constraints garantizan la integridad de los datos a nivel de base de datos</li>
+                <li>Los triggers mantienen automáticamente los timestamps de actualización</li>
+            </ul>
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #ecf0f1;">
+        
+        <div style="text-align: center; color: #7f8c8d; font-size: 0.9em; padding: 20px 0;">
+            <p><strong>Event Platform</strong> - Sistema de Gestión de Eventos</p>
+            <p>Estructura de Base de Datos PostgreSQL 16</p>
+            <p>Generado: Noviembre 2024</p>
+        </div>
+    </div>
+</body>
+</html>

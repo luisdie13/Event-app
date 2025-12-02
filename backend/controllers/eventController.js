@@ -8,17 +8,17 @@ import { pool } from '../database/db.js';
 
 /**
  * GET /api/events/featured
- * Controlador para obtener los eventos destacados.
+ * Controlador para obtener los eventos destacados con paginación.
+ * Query params: page, limit
  */
 export const getFeatured = async (req, res) => {
     try {
-        const events = await getFeaturedEvents(); 
-        
-        if (events.length === 0) {
-            return res.status(200).json([]); 
-        }
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6;
 
-        res.status(200).json(events);
+        const result = await getFeaturedEvents(page, limit);
+        
+        res.status(200).json(result);
     } catch (error) {
         console.error('Error en getFeatured:', error.message); 
         res.status(500).json({ 
@@ -30,18 +30,30 @@ export const getFeatured = async (req, res) => {
 /**
  * GET /api/events
  * GET /api/events/category/:slug
+ * Controlador para obtener eventos con paginación y filtros avanzados.
+ * Query params: page, limit, search, minPrice, maxPrice, dateFrom, dateTo, location, sortBy
  */
 export const getEvents = async (req, res) => {
     const categorySlug = req.params.slug; 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 9;
+    
+    // Construir objeto de filtros
+    const filters = {
+        categorySlug,
+        search: req.query.search,
+        minPrice: req.query.minPrice,
+        maxPrice: req.query.maxPrice,
+        dateFrom: req.query.dateFrom,
+        dateTo: req.query.dateTo,
+        location: req.query.location,
+        sortBy: req.query.sortBy
+    };
 
     try {
-        const events = await getEventsList(categorySlug);
+        const result = await getEventsList(filters, page, limit);
         
-        if (events.length === 0) {
-            return res.status(200).json([]);
-        }
-        
-        res.status(200).json(events);
+        res.status(200).json(result);
     } catch (error) {
         console.error('Error en getEvents:', error.message);
         res.status(500).json({ 

@@ -2,10 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Pagination from './Pagination';
 
 const MyTickets = () => {
     const { user, token, logout } = useAuth();
     const [tickets, setTickets] = useState([]);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalTickets: 0
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState('all'); // all, upcoming, past
@@ -16,16 +22,20 @@ const MyTickets = () => {
         } else {
             setLoading(false);
         }
-    }, [user, token]);
+    }, [user, token, pagination.currentPage]);
 
     const fetchTickets = async () => {
+        setLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/api/orders/my-tickets', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+            const response = await fetch(
+                `http://localhost:3001/api/orders/my-tickets?page=${pagination.currentPage}&limit=10`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 }
-            });
+            );
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -41,7 +51,12 @@ const MyTickets = () => {
             }
 
             const data = await response.json();
-            setTickets(data);
+            setTickets(data.tickets || []);
+            setPagination({
+                currentPage: data.pagination?.currentPage || 1,
+                totalPages: data.pagination?.totalPages || 1,
+                totalTickets: data.pagination?.totalTickets || 0
+            });
             setLoading(false);
         } catch (err) {
             // Si hay error de red, también podría ser un token inválido
@@ -54,6 +69,11 @@ const MyTickets = () => {
             setError('Error al cargar tus tickets. Por favor, intenta nuevamente.');
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        setPagination(prev => ({ ...prev, currentPage: newPage }));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const getFilteredTickets = () => {
@@ -135,6 +155,7 @@ const MyTickets = () => {
     }
 
     const filteredTickets = getFilteredTickets();
+    const allTicketsCount = pagination.totalTickets;
     const upcomingCount = tickets.filter(t => new Date(t.event_date) >= new Date()).length;
     const pastCount = tickets.filter(t => new Date(t.event_date) < new Date()).length;
 
@@ -150,7 +171,7 @@ const MyTickets = () => {
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-28 max-w-4xl mx-auto">
                     <div className="bg-white rounded-lg shadow-lg p-6 text-center">
-                        <div className="text-3xl font-bold text-blue-600">{tickets.length}</div>
+                        <div className="text-3xl font-bold text-blue-600">{allTicketsCount}</div>
                         <div className="text-gray-600">Total de Tickets</div>
                     </div>
                     <div className="bg-white rounded-lg shadow-lg p-6 text-center">
@@ -173,7 +194,7 @@ const MyTickets = () => {
                                 : 'bg-white text-gray-700 hover:bg-blue-50'
                         }`}
                     >
-                        Todos ({tickets.length})
+                        Todos ({allTicketsCount})
                     </button>
                     <button
                         onClick={() => setFilter('upcoming')}
@@ -214,8 +235,9 @@ const MyTickets = () => {
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-12 max-w-4xl mx-auto">
-                        {filteredTickets.map((ticket) => (
+                    <>
+                        <div className="space-y-12 max-w-4xl mx-auto">
+                            {filteredTickets.map((ticket) => (
                             <div key={ticket.id} className="bg-white rounded-lg shadow-lg hover:shadow-xl transition overflow-hidden">
                             <div className="md:flex">
                                 {/* Image */}
@@ -231,12 +253,12 @@ const MyTickets = () => {
                                 <div className="p-5 flex-1">
                                     <div className="flex justify-between items-start mb-3">
                                         <div>
-                                            <Link 
-                                                to={`/event/${ticket.event_slug}`}
-                                                className="text-lg font-bold text-gray-800 hover:text-blue-600 transition"
-                                            >
-                                                {ticket.event_title}
-                                            </Link>
+                      <Link
+                        to={`/event/${ticket.event_slug}?from=tickets`}
+                        className="text-lg font-semibold text-blue-400 hover:text-blue-300 hover:underline transition"
+                      >
+                        {ticket.event_title}
+                      </Link>
                                             <p className="text-xs text-gray-500">{ticket.category_name}</p>
                                         </div>
                                         {getStatusBadge(ticket.status, ticket.event_date)}
@@ -284,8 +306,16 @@ const MyTickets = () => {
                                 </div>
                             </div>
                             </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                        
+                        {/* Pagination */}
+                        <Pagination
+                            currentPage={pagination.currentPage}
+                            totalPages={pagination.totalPages}
+                            onPageChange={handlePageChange}
+                        />
+                    </>
                 )}
             </div>
         </div>

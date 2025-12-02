@@ -81,23 +81,7 @@ export const setupTestDb = async () => {
         quantity INTEGER NOT NULL,
         total_price DECIMAL(10,2) NOT NULL,
         status VARCHAR(50) DEFAULT 'active',
-        purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        card_id UUID REFERENCES payment_cards(id) ON DELETE SET NULL
-      );
-    `);
-
-    await testPool.query(`
-      CREATE TABLE IF NOT EXISTS payment_cards (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        card_holder_name VARCHAR(255) NOT NULL,
-        card_number_last4 VARCHAR(4) NOT NULL,
-        card_brand VARCHAR(50) NOT NULL,
-        expiry_month INTEGER NOT NULL,
-        expiry_year INTEGER NOT NULL,
-        is_default BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -109,7 +93,6 @@ export const setupTestDb = async () => {
     `);
 
     // Clean up existing data in proper order (respecting foreign keys)
-    await testPool.query('DELETE FROM payment_cards');
     await testPool.query('DELETE FROM tickets');
     await testPool.query('DELETE FROM images');
     await testPool.query('DELETE FROM events');

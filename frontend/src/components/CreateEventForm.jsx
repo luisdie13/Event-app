@@ -130,13 +130,13 @@ const CreateEventForm = () => {
             {/* Título */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">Título</label>
-              <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3" placeholder="Ej: Concierto de Jazz Nocturno"/>
+              <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 text-gray-900 placeholder-gray-600" placeholder="Ej: Concierto de Jazz Nocturno"/>
             </div>
 
             {/* Categoría */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="categoryId">Categoría</label>
-              <select id="categoryId" name="categoryId" value={formData.categoryId} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 bg-white">
+              <select id="categoryId" name="categoryId" value={formData.categoryId} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 bg-white text-gray-900">
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
@@ -146,19 +146,19 @@ const CreateEventForm = () => {
             {/* Fecha y Hora */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="dateTime">Fecha y Hora</label>
-              <input type="datetime-local" id="dateTime" name="dateTime" value={formData.dateTime} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3"/>
+              <input type="datetime-local" id="dateTime" name="dateTime" value={formData.dateTime} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 text-gray-900"/>
             </div>
 
             {/* Lugar */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">Ubicación</label>
-              <input type="text" id="location" name="location" value={formData.location} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3" placeholder="Ej: Teatro Municipal, Sala 3"/>
+              <input type="text" id="location" name="location" value={formData.location} onChange={handleChange} required className="shadow border rounded w-full py-3 px-3 text-gray-900 placeholder-gray-600" placeholder="Ej: Teatro Municipal, Sala 3"/>
             </div>
             
             {/* Imagen Principal URL */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="mainImageUrl">URL Imagen Principal</label>
-              <input type="url" id="mainImageUrl" name="mainImageUrl" value={formData.mainImageUrl} onChange={handleChange} className="shadow border rounded w-full py-3 px-3" placeholder="Ej: https://picsum.photos/800/400"/>
+              <input type="url" id="mainImageUrl" name="mainImageUrl" value={formData.mainImageUrl} onChange={handleChange} className="shadow border rounded w-full py-3 px-3 text-gray-900 placeholder-gray-600" placeholder="Ej: https://picsum.photos/800/400"/>
             </div>
         </div>
 
@@ -167,26 +167,26 @@ const CreateEventForm = () => {
             {/* Descripción */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">Descripción</label>
-              <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="6" required className="shadow border rounded w-full py-3 px-3 resize-none" placeholder="Describe los detalles, artistas, y ambiente del evento."></textarea>
+              <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="6" required className="shadow border rounded w-full py-3 px-3 resize-none text-gray-900 placeholder-gray-600" placeholder="Describe los detalles, artistas, y ambiente del evento."></textarea>
             </div>
 
             {/* Tickets Totales */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="totalTickets">Tickets Totales</label>
-              <input type="number" id="totalTickets" name="totalTickets" value={formData.totalTickets} onChange={handleChange} required min="1" className="shadow border rounded w-full py-3 px-3" placeholder="Cantidad total de entradas"/>
+              <input type="number" id="totalTickets" name="totalTickets" value={formData.totalTickets} onChange={handleChange} required min="1" className="shadow border rounded w-full py-3 px-3 text-gray-900 placeholder-gray-600" placeholder="Cantidad total de entradas"/>
             </div>
 
             {/* Precio */}
             <div className="mb-6">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">Precio (USD)</label>
-              <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} required min="0.00" step="0.01" className="shadow border rounded w-full py-3 px-3" placeholder="Ej: 25.50 (Usa 0.00 para Gratuito)"/>
+              <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} required min="0.00" step="0.01" className="shadow border rounded w-full py-3 px-3 text-gray-900 placeholder-gray-600" placeholder="Ej: 25.50 (Usa 0.00 para Gratuito)"/>
             </div>
 
             {/* Botón de Submit */}
             <button
               type="submit"
               disabled={isLoading || !isLoggedIn}
-              className="bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-xl focus:outline-none w-full transition duration-150 disabled:bg-gray-400"
+              className="bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl border-2 border-blue-900 focus:outline-none w-full transition duration-150 disabled:bg-gray-400"
             >
               {isLoading ? 'Creando Evento...' : 'Publicar Evento'}
             </button>

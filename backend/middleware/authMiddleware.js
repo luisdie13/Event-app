@@ -26,7 +26,7 @@ export const protect = (req, res, next) => {
             } catch (firstError) {
                 // Si falla, intentar con el secret anterior (fallback)
                 try {
-                    decoded = jwt.verify(token, 'mi_secreto_super_seguro_y_largo_debes_cambiarlo');
+                    decoded = jwt.verify(token, 'mi_secreto_super_seguro_y_largo_debe_cambiarse');
                 } catch (secondError) {
                     throw firstError; // Lanzar el error original
                 }

@@ -16,7 +16,7 @@ export const createOrder = async (req, res) => {
     if (!eventId || !quantity || quantity < 1) {
         return res.status(400).json({ message: "Datos de orden inválidos (Falta evento o cantidad)." });
     }
-
+    // Create Order
     try {
         const result = await createOrderTransaction(userId, eventId, quantity, cardId);
         

@@ -11,6 +11,7 @@ import { pool } from '../database/db.js';
 export const getReports = async (req, res) => {
     try {
         // 1. Total de ventas (suma de todos los tickets vendidos)
+        // Sirve para saber cuánto dinero ha entrado y cuántas entradas se han vendido en total.
         const salesQuery = `
             SELECT 
                 COALESCE(SUM(total_price), 0) AS total_sales,
@@ -22,6 +23,7 @@ export const getReports = async (req, res) => {
         const salesResult = await pool.query(salesQuery);
         
         // 2. Total de asistentes únicos (usuarios que compraron tickets)
+        // Sirve para saber cuántas personas únicas han comprado.
         const attendeesQuery = `
             SELECT COUNT(DISTINCT user_id) AS total_attendees
             FROM tickets

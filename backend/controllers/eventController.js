@@ -87,7 +87,7 @@ export const getEventDetail = async (req, res) => {
 
 /**
  * GET /api/events/id/:id
- * 👇 NUEVA FUNCIÓN: Busca por ID exacto (UUID) para el Checkout
+ * Busca por ID exacto (UUID) para el Checkout
  */
 export const getEventById = async (req, res) => {
     const { id } = req.params;

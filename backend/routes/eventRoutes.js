@@ -22,8 +22,7 @@ router.get('/category/:slug', getEvents);
 // 2. Eventos destacados
 router.get('/featured', getFeatured);
 
-// 3. 👇 NUEVO: Obtener evento por ID (Para el Checkout)
-// IMPORTANTE: Esta ruta debe ir ANTES de /:slug para evitar conflictos
+// 3. Obtener evento por ID (Para el Checkout)
 router.get('/id/:id', getEventById);
 
 // 4. Obtener detalle por Slug (Para la vista de detalles)

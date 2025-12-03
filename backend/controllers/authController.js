@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { findUserByEmail, createUser } from '../database/userQueries.js';
 
-// Asegúrate de que esta variable esté en tu .env o hardcodeada si no tienes secrets
+// Esta variable debe de estar en el .env o hardcodeada si no hay secrets
 const JWT_SECRET = process.env.JWT_SECRET || 'mi_secreto_super_seguro_y_largo_debes_cambiarlo';
 
 // Número de rondas de hashing. 10 es un valor seguro estándar.

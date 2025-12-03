@@ -41,20 +41,7 @@ jobs:
       working-directory: ./backend
       run: npm ci
     
-    - name: Ejecutar pruebas con cobertura
-      working-directory: ./backend
-      env:
-        NODE_ENV: test
-        DB_USER: postgres
-        DB_PASSWORD: postgres
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_NAME: eventplatform
-        DB_TEST_NAME: eventplatform_test
-        JWT_SECRET: mi_secreto_super_seguro_y_largo_debes_cambiarlo
-      run: npm run test:coverage
-    
-    - name: Verificar umbral de cobertura (80%)
+    - name: Ejecutar pruebas con cobertura y verificar umbral (80%)
       working-directory: ./backend
       env:
         NODE_ENV: test
@@ -72,8 +59,17 @@ jobs:
         echo "========================================"
         echo ""
         
+        # Ejecutar tests con cobertura (solo una vez)
         COVERAGE_OUTPUT=$(npm run test:coverage 2>&1)
+        TEST_EXIT_CODE=$?
         echo "$COVERAGE_OUTPUT"
+        
+        # Si los tests fallaron, terminar aquí
+        if [ $TEST_EXIT_CODE -ne 0 ]; then
+          echo ""
+          echo "❌ LOS TESTS FALLARON"
+          exit $TEST_EXIT_CODE
+        fi
         
         # Extraer línea de cobertura total
         COVERAGE_LINE=$(echo "$COVERAGE_OUTPUT" | grep "All files" | head -1)
